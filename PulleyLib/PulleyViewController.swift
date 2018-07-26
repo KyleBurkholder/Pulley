@@ -157,9 +157,15 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     /// When using with Interface Builder only! Connect a containing view to this outlet.
     @IBOutlet public var drawerContentContainerView: UIView!
     
+    /// When using with Interface Bulider only! Connect a containing view to this outlet.
+    //Added by KB
+    @IBOutlet public var topDrawerContentContainerView: UIView!
+    
     // Internal
     fileprivate let primaryContentContainer: UIView = UIView()
     fileprivate let drawerContentContainer: UIView = UIView()
+    //Added by KB
+    fileprivate let topDrawerContentContainer: UIView = UIView()
     fileprivate let drawerShadowView: UIView = UIView()
     fileprivate let drawerScrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
     fileprivate let backgroundDimmingView: UIView = UIView()
@@ -234,6 +240,42 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             controller.didMove(toParentViewController: self)
 
+            if self.isViewLoaded
+            {
+                self.view.setNeedsLayout()
+                self.setNeedsSupportedDrawerPositionsUpdate()
+            }
+        }
+    }
+    
+    /// The current drawer view controller (shown in the top drawer).
+    //Added by KB
+    public fileprivate(set) var topDrawerContentViewController: UIViewController! {
+        willSet {
+            
+            guard let controller = topDrawerContentViewController else {
+                return
+            }
+            
+            controller.willMove(toParentViewController: nil)
+            controller.view.removeFromSuperview()
+            controller.removeFromParentViewController()
+        }
+        
+        didSet {
+            
+            guard let controller = topDrawerContentViewController else {
+                return
+            }
+            
+            addChildViewController(controller)
+            
+            drawerContentContainer.addSubview(controller.view)
+            
+            controller.view.constrainToParent()
+            
+            controller.didMove(toParentViewController: self)
+            
             if self.isViewLoaded
             {
                 self.view.setNeedsLayout()
