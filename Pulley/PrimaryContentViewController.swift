@@ -40,7 +40,7 @@ class PrimaryContentViewController: UIViewController {
         // drawer.drawerBackgroundVisualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
 
         // We want the 'side panel' layout in landscape iPhone / iPad, so we set this to 'automatic'. The default is 'bottomDrawer' for compatibility with older Pulley versions.
-        self.pulleyViewController?.displayMode = .automatic
+        self.pulleyViewController?.displayMode = .leftSide
     }
     
     @IBAction func runPrimaryContentTransitionWithoutAnimation(sender: AnyObject) {
