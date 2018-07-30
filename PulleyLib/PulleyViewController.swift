@@ -144,8 +144,8 @@ public enum PulleySnapMode {
     case nearestPositionUnlessExceeded(threshold: CGFloat)
 }
 
-private let kPulleyDefaultCollapsedHeight: CGFloat = 68.0
-private let kPulleyDefaultPartialRevealHeight: CGFloat = 264.0
+let kPulleyDefaultCollapsedHeight: CGFloat = 68.0
+let kPulleyDefaultPartialRevealHeight: CGFloat = 264.0
 
 open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDelegate {
     
@@ -158,22 +158,22 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     @IBOutlet public var drawerContentContainerView: UIView!
     
     // Internal
-    fileprivate let primaryContentContainer: UIView = UIView()
-    fileprivate let drawerContentContainer: UIView = UIView()
-    fileprivate let drawerShadowView: UIView = UIView()
-    fileprivate let drawerScrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
-    fileprivate let backgroundDimmingView: UIView = UIView()
+    let primaryContentContainer: UIView = UIView()
+    let drawerContentContainer: UIView = UIView()
+    let drawerShadowView: UIView = UIView()
+    let drawerScrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
+    let backgroundDimmingView: UIView = UIView()
     
-    fileprivate var dimmingViewTapRecognizer: UITapGestureRecognizer?
+    var dimmingViewTapRecognizer: UITapGestureRecognizer?
     
-    fileprivate var lastDragTargetContentOffset: CGPoint = CGPoint.zero
+    var lastDragTargetContentOffset: CGPoint = CGPoint.zero
 
     // Public
     
     public let bounceOverflowMargin: CGFloat = 20.0
 
     /// The current content view controller (shown behind the drawer).
-    public fileprivate(set) var primaryContentViewController: UIViewController! {
+    public internal(set) var primaryContentViewController: UIViewController! {
         willSet {
             
             guard let controller = primaryContentViewController else {
@@ -208,7 +208,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
     
     /// The current drawer view controller (shown in the drawer).
-    public fileprivate(set) var drawerContentViewController: UIViewController! {
+    public internal(set) var drawerContentViewController: UIViewController! {
         willSet {
 
             guard let controller = drawerContentViewController else {
@@ -253,7 +253,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     public weak var delegate: PulleyDelegate?
     
     /// The current position of the drawer.
-    public fileprivate(set) var drawerPosition: PulleyPosition = .collapsed {
+    public internal(set) var drawerPosition: PulleyPosition = .collapsed {
         didSet {
             setNeedsStatusBarAppearanceUpdate()
         }
@@ -510,7 +510,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
     
     /// The drawer positions supported by the drawer
-    fileprivate var supportedPositions: [PulleyPosition] = PulleyPosition.all {
+    var supportedPositions: [PulleyPosition] = PulleyPosition.all {
         didSet {
             
             guard self.isViewLoaded else {
@@ -542,7 +542,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
     
     /// The currently rendered display mode for Pulley. This will match displayMode unless you have it set to 'automatic'. This will provide the 'actual' display mode (never automatic).
-    public fileprivate(set) var currentDisplayMode: PulleyDisplayMode = .automatic {
+    public internal(set) var currentDisplayMode: PulleyDisplayMode = .automatic {
         didSet {
             if self.isViewLoaded
             {
@@ -558,10 +558,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         }
     }
     
-    fileprivate var isAnimatingDrawerPosition: Bool = false
+    var isAnimatingDrawerPosition: Bool = false
     
     /// The height of the open position for the drawer
-    private var heightOfOpenDrawer: CGFloat {
+    var heightOfOpenDrawer: CGFloat {
         
         var safeAreaTopInset: CGFloat = 20.0
         
@@ -884,9 +884,9 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         setDrawerPosition(position: drawerPosition, animated: false)
     }
 
-    // MARK: Private State Updates
+    // MARK: Internal State Updates
 
-    private func enforceCanScrollDrawer() {
+    func enforceCanScrollDrawer() {
         guard isViewLoaded else {
             return
         }
@@ -935,7 +935,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     /**
      Mask backgroundDimmingView layer to avoid drawer background beeing darkened.
      */
-    private func maskBackgroundDimmingView() {
+    func maskBackgroundDimmingView() {
         
         let cutoutHeight = 2 * drawerCornerRadius
         let maskHeight = backgroundDimmingView.bounds.size.height - cutoutHeight - drawerScrollView.contentSize.height
@@ -1039,7 +1039,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
      
      - returns: a frame for moving backgroundDimmingView according to drawer position
      */
-    private func backgroundDimmingViewFrameForDrawerPosition(_ drawerPosition: CGFloat) -> CGRect {
+    func backgroundDimmingViewFrameForDrawerPosition(_ drawerPosition: CGFloat) -> CGRect {
         let cutoutHeight = (2 * drawerCornerRadius)
         var backgroundDimmingViewFrame = backgroundDimmingView.frame
         backgroundDimmingViewFrame.origin.y = 0 - drawerPosition + cutoutHeight
@@ -1047,7 +1047,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         return backgroundDimmingViewFrame
     }
     
-    private func syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode() {
+    func syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode() {
         
         guard currentDisplayMode == .leftSide else {
             return
