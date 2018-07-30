@@ -157,15 +157,9 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     /// When using with Interface Builder only! Connect a containing view to this outlet.
     @IBOutlet public var drawerContentContainerView: UIView!
     
-    /// When using with Interface Bulider only! Connect a containing view to this outlet.
-    //Added by KB
-    @IBOutlet public var topDrawerContentContainerView: UIView!
-    
     // Internal
     fileprivate let primaryContentContainer: UIView = UIView()
     fileprivate let drawerContentContainer: UIView = UIView()
-    //Added by KB
-    fileprivate let topDrawerContentContainer: UIView = UIView()
     fileprivate let drawerShadowView: UIView = UIView()
     fileprivate let drawerScrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
     fileprivate let backgroundDimmingView: UIView = UIView()
@@ -240,42 +234,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             controller.didMove(toParentViewController: self)
 
-            if self.isViewLoaded
-            {
-                self.view.setNeedsLayout()
-                self.setNeedsSupportedDrawerPositionsUpdate()
-            }
-        }
-    }
-    
-    /// The current drawer view controller (shown in the top drawer).
-    //Added by KB
-    public fileprivate(set) var topDrawerContentViewController: UIViewController! {
-        willSet {
-            
-            guard let controller = topDrawerContentViewController else {
-                return
-            }
-            
-            controller.willMove(toParentViewController: nil)
-            controller.view.removeFromSuperview()
-            controller.removeFromParentViewController()
-        }
-        
-        didSet {
-            
-            guard let controller = topDrawerContentViewController else {
-                return
-            }
-            
-            addChildViewController(controller)
-            
-            drawerContentContainer.addSubview(controller.view)
-            
-            controller.view.constrainToParent()
-            
-            controller.didMove(toParentViewController: self)
-            
             if self.isViewLoaded
             {
                 self.view.setNeedsLayout()
@@ -618,7 +576,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         case .bottomDrawer:
             bottomInset = 0.0
         case .leftSide:
-            bottomInset = panelInsetTop
+            bottomInset = topInset
         default:
             bottomInset = 0.0
         }
@@ -834,19 +792,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             let adjustedLeftSafeArea = adjustDrawerHorizontalInsetToSafeArea ? safeAreaLeftInset : 0.0
             let adjustedRightSafeArea = adjustDrawerHorizontalInsetToSafeArea ? safeAreaRightInset : 0.0
             
-            
-//            if supportedPositions.contains(.open)
-//            {
-//                // Layout scrollview
-//                drawerScrollView.frame = CGRect(x: adjustedLeftSafeArea, y: topInset + safeAreaTopInset, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: heightOfOpenDrawer)
-//            }
-//            else
-//            {
-            
                 // Layout scrollview
             let adjustedTopInset: CGFloat = getStopList().max() ?? 0.0
             drawerScrollView.frame = CGRect(x: adjustedLeftSafeArea, y: self.view.bounds.height - adjustedTopInset, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: adjustedTopInset)
-//            }
+            
             print("drawerScrollView frame = \(drawerScrollView.frame)")
             drawerScrollView.addSubview(drawerShadowView)
             
@@ -1040,8 +989,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     public func removeDrawerGestureRecognizer(gestureRecognizer: UIGestureRecognizer) {
         drawerScrollView.removeGestureRecognizer(gestureRecognizer)
     }
-    
-    //TODO: Add gesture recognizer for top drawer
     
     /// Bounce the drawer to get user attention. Note: Only works in .bottomDrawer display mode and when the drawer is in .collapsed or .partiallyRevealed position.
     ///
