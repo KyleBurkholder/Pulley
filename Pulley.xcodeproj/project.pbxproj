@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02E2855E210FCF88004391BD /* DoublePulleyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E2855D210FCF88004391BD /* DoublePulleyViewController.swift */; };
 		355DBF171E40EA4300671CDD /* Pulley.h in Headers */ = {isa = PBXBuildFile; fileRef = 355DBF151E40EA4300671CDD /* Pulley.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		355DBF1A1E40EA4300671CDD /* Pulley.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 355DBF131E40EA4300671CDD /* Pulley.framework */; };
 		355DBF1B1E40EA4300671CDD /* Pulley.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 355DBF131E40EA4300671CDD /* Pulley.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -48,6 +49,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		02E2855D210FCF88004391BD /* DoublePulleyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoublePulleyViewController.swift; sourceTree = "<group>"; };
 		355DBF131E40EA4300671CDD /* Pulley.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pulley.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		355DBF151E40EA4300671CDD /* Pulley.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Pulley.h; sourceTree = "<group>"; };
 		355DBF161E40EA4300671CDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 				E15E853020BE56B900800173 /* UIViewController+PulleyViewController.swift */,
 				C6131BB71D305995002F27F3 /* PulleyPassthroughScrollView.swift */,
 				C6131BB81D305995002F27F3 /* PulleyViewController.swift */,
+				02E2855D210FCF88004391BD /* DoublePulleyViewController.swift */,
 				C6C51DDC1F5108980079B57F /* UIView+constrainToParent.swift */,
 				355DBF161E40EA4300671CDD /* Info.plist */,
 			);
@@ -259,6 +262,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E15E853120BE56B900800173 /* UIViewController+PulleyViewController.swift in Sources */,
+				02E2855E210FCF88004391BD /* DoublePulleyViewController.swift in Sources */,
 				355DBF201E40EA5C00671CDD /* PulleyPassthroughScrollView.swift in Sources */,
 				355DBF211E40EA5F00671CDD /* PulleyViewController.swift in Sources */,
 				C6C51DDD1F5108980079B57F /* UIView+constrainToParent.swift in Sources */,
