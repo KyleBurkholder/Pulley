@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		020066692125B67C00751413 /* DoublePulleyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020066682125B67C00751413 /* DoublePulleyViewController.swift */; };
 		022C9AE221126BDE00CB3B59 /* StaticVariables+Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022C9AE121126BDE00CB3B59 /* StaticVariables+Enums.swift */; };
-		02E2855E210FCF88004391BD /* DoublePulleyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E2855D210FCF88004391BD /* DoublePulleyViewController.swift */; };
 		02E28566210FF797004391BD /* PulleyDrawer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E28565210FF797004391BD /* PulleyDrawer.swift */; };
+		02E6E3B92125B5DA0088144E /* UIScrollView+PulleyDrawer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E6E3B82125B5DA0088144E /* UIScrollView+PulleyDrawer.swift */; };
 		355DBF171E40EA4300671CDD /* Pulley.h in Headers */ = {isa = PBXBuildFile; fileRef = 355DBF151E40EA4300671CDD /* Pulley.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		355DBF1A1E40EA4300671CDD /* Pulley.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 355DBF131E40EA4300671CDD /* Pulley.framework */; };
 		355DBF1B1E40EA4300671CDD /* Pulley.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 355DBF131E40EA4300671CDD /* Pulley.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -51,9 +52,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		020066682125B67C00751413 /* DoublePulleyViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DoublePulleyViewController.swift; path = PulleyLib/DoublePulleyViewController.swift; sourceTree = SOURCE_ROOT; };
 		022C9AE121126BDE00CB3B59 /* StaticVariables+Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StaticVariables+Enums.swift"; path = "PulleyLib/StaticVariables+Enums.swift"; sourceTree = SOURCE_ROOT; };
-		02E2855D210FCF88004391BD /* DoublePulleyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoublePulleyViewController.swift; sourceTree = "<group>"; };
 		02E28565210FF797004391BD /* PulleyDrawer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PulleyDrawer.swift; path = PulleyLib/PulleyDrawer.swift; sourceTree = SOURCE_ROOT; };
+		02E6E3B82125B5DA0088144E /* UIScrollView+PulleyDrawer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UIScrollView+PulleyDrawer.swift"; path = "PulleyLib/UIScrollView+PulleyDrawer.swift"; sourceTree = SOURCE_ROOT; };
 		355DBF131E40EA4300671CDD /* Pulley.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pulley.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		355DBF151E40EA4300671CDD /* Pulley.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Pulley.h; sourceTree = "<group>"; };
 		355DBF161E40EA4300671CDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -96,11 +98,12 @@
 			children = (
 				355DBF151E40EA4300671CDD /* Pulley.h */,
 				C6131BB81D305995002F27F3 /* PulleyViewController.swift */,
+				020066682125B67C00751413 /* DoublePulleyViewController.swift */,
 				02E28565210FF797004391BD /* PulleyDrawer.swift */,
 				022C9AE121126BDE00CB3B59 /* StaticVariables+Enums.swift */,
 				C6131BB71D305995002F27F3 /* PulleyPassthroughScrollView.swift */,
 				E15E853020BE56B900800173 /* UIViewController+PulleyViewController.swift */,
-				02E2855D210FCF88004391BD /* DoublePulleyViewController.swift */,
+				02E6E3B82125B5DA0088144E /* UIScrollView+PulleyDrawer.swift */,
 				C6C51DDC1F5108980079B57F /* UIView+constrainToParent.swift */,
 				355DBF161E40EA4300671CDD /* Info.plist */,
 			);
@@ -267,11 +270,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				020066692125B67C00751413 /* DoublePulleyViewController.swift in Sources */,
 				E15E853120BE56B900800173 /* UIViewController+PulleyViewController.swift in Sources */,
 				02E28566210FF797004391BD /* PulleyDrawer.swift in Sources */,
-				02E2855E210FCF88004391BD /* DoublePulleyViewController.swift in Sources */,
 				355DBF201E40EA5C00671CDD /* PulleyPassthroughScrollView.swift in Sources */,
 				022C9AE221126BDE00CB3B59 /* StaticVariables+Enums.swift in Sources */,
+				02E6E3B92125B5DA0088144E /* UIScrollView+PulleyDrawer.swift in Sources */,
 				355DBF211E40EA5F00671CDD /* PulleyViewController.swift in Sources */,
 				C6C51DDD1F5108980079B57F /* UIView+constrainToParent.swift in Sources */,
 			);

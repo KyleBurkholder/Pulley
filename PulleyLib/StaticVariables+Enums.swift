@@ -18,13 +18,15 @@
 @objc public class PulleyPosition: NSObject {
     
     public static let collapsed = PulleyPosition(rawValue: 0)
-    public static let partiallyRevealed = PulleyPosition(rawValue: 1)
-    public static let revealed = PulleyPosition(rawValue: 2)
-    public static let open = PulleyPosition(rawValue: 3)
-    public static let closed = PulleyPosition(rawValue: 4)
+    public static let standard = PulleyPosition(rawValue: 1)
+    public static let partiallyRevealed = PulleyPosition(rawValue: 2)
+    public static let revealed = PulleyPosition(rawValue: 3)
+    public static let open = PulleyPosition(rawValue: 4)
+    public static let closed = PulleyPosition(rawValue: 5)
     
     public static let all: [PulleyPosition] = [
         .collapsed,
+        .standard,
         .partiallyRevealed,
         .revealed,
         .open,
@@ -48,6 +50,9 @@
             
         case "collapsed":
             return .collapsed
+            
+        case "standard":
+            return .standard
             
         case "partiallyrevealed":
             return .partiallyRevealed
@@ -89,7 +94,7 @@
 /// - automatic: Determine it based on device / orientation / size class (like Maps.app)
 public enum PulleyDisplayMode {
     case leftSide
-    case bottomDrawer
+    case drawer
     case automatic
 }
 

@@ -43,6 +43,46 @@ public class PulleyDrawer
     init(originSide type: DrawerType)
     {
         self.type = type
+        
+        scrollView.bounces = false
+        scrollView.clipsToBounds = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        
+        scrollView.delaysContentTouches = delaysContentTouches
+        scrollView.canCancelContentTouches = canCancelContentTouches
+        
+        //TODO: Remove the coloring of the the scrollView when I get everything working
+        switch self.type {
+        case .bottom:
+                    scrollView.backgroundColor = UIColor.red
+        case .top:
+                    scrollView.backgroundColor = UIColor.purple
+        default:
+            return
+        }
+
+        scrollView.decelerationRate = UIScrollViewDecelerationRateFast
+        scrollView.scrollsToTop = false
+        
+        shadowView.layer.shadowOpacity = shadowOpacity
+        shadowView.layer.shadowRadius = shadowRadius
+        shadowView.backgroundColor = UIColor.clear
+        
+        contentContainer.backgroundColor = UIColor.clear
+        
+        backgroundVisualEffectView?.clipsToBounds = true
+        
+        scrollView.addSubview(shadowView)
+        
+        if let drawerBackgroundVisualEffectView = backgroundVisualEffectView
+        {
+            scrollView.addSubview(drawerBackgroundVisualEffectView)
+            drawerBackgroundVisualEffectView.layer.cornerRadius = cornerRadius
+        }
+        
+        scrollView.addSubview(contentContainer)
+        
     }
     
     //MARK: drawerPosition properties
@@ -93,16 +133,23 @@ public class PulleyDrawer
     var collapsedHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
-            return drawerDelegate?.collapsedDrawerHeight?(bottomSafeArea: originSafeArea) ?? kPulleyDefaultCollapsedHeight
+            return drawerDelegate?.collapsedDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultCollapsedHeight
         }
         return kPulleyDefaultCollapsedHeight
     }
     
+    var standardlHeight: CGFloat {
+        if let originSafeArea = delegate?.getOriginSafeArea(for: self)
+        {
+            return drawerDelegate?.standardDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultStandardHeight
+        }
+        return kPulleyDefaultStandardHeight
+    }
     
     var partialRevealHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
-            return drawerDelegate?.partialRevealDrawerHeight?(bottomSafeArea: originSafeArea) ?? kPulleyDefaultPartialRevealHeight
+            return drawerDelegate?.partialRevealDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultPartialRevealHeight
         }
         return kPulleyDefaultPartialRevealHeight
     }
@@ -110,7 +157,7 @@ public class PulleyDrawer
     var revealHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
-            return drawerDelegate?.revealDrawerHeight?(bottomSafeArea: originSafeArea) ?? kPulleyDefaultRevealHeight
+            return drawerDelegate?.revealDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultRevealHeight
         }
         return kPulleyDefaultRevealHeight
     }
@@ -125,7 +172,7 @@ public class PulleyDrawer
     }
     
     /// The display mode for Pulley. Default is 'bottomDrawer', which preserves the previous behavior of Pulley. If you want it to adapt automatically, choose 'automatic'. The current display mode is available by using the 'currentDisplayMode' property.
-    public var displayMode: PulleyDisplayMode = .bottomDrawer
+    public var displayMode: PulleyDisplayMode = .drawer
     {
         didSet {
             delegate?.delegateNeedsLayout()
