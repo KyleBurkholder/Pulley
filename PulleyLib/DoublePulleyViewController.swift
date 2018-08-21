@@ -13,11 +13,6 @@ open class DoublePulleyViewController: PulleyViewController
     /// When using with Interface Builder only! Connect a containing view to this outlet.
     @IBOutlet public var topDrawerContentContainerView: UIView!
     
-    // Internal
-    let topDrawerContentContainer: UIView = UIView()
-    let topDrawerShadowView: UIView = UIView()
-    let topDrawerScrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
-    
     // Public
     public var topDrawer: PulleyDrawer = PulleyDrawer(originSide: .top)
 
@@ -144,6 +139,7 @@ open class DoublePulleyViewController: PulleyViewController
     
     override open func viewDidLayoutSubviews()
     {
+        super.viewDidLayoutSubviews()
         // Make sure our view controller views are subviews of the right view (Resolves #21 issue with changing the presentation context)
         
         // May be nil during initial layout
@@ -206,14 +202,19 @@ open class DoublePulleyViewController: PulleyViewController
     
     override public func scrollViewDidScroll(_ scrollView: UIScrollView)
     {
-        switch scrollView {
-        case bottomDrawer.scrollView:
-            scrollViewDidScroll(for: bottomDrawer, scrollView)
-        case topDrawer.scrollView:
-            scrollViewDidScroll(for: topDrawer, scrollView)
-        default:
-            return
-        }
+
+//        switch scrollView {
+//        case bottomDrawer.scrollView:
+//            scrollViewDidScroll(for: bottomDrawer, scrollView)
+//        case topDrawer.scrollView:
+//            scrollViewDidScroll(for: topDrawer, scrollView)
+//        default:
+//            return
+//        }
+    }
+    
+    override public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+                print("drawer.scrollView.contentoffest = \((scrollView as? PulleyPassthroughScrollView)!.parentDrawer!.scrollView.contentOffset.y)")
     }
     
     /**
@@ -232,25 +233,10 @@ open class DoublePulleyViewController: PulleyViewController
                 case topDrawerContentViewController:
                     topDrawer.supportedPositions = drawerVCCompliant.supportedDrawerPositions?() ?? PulleyPosition.all
                 default:
-                    return
+                    continue
                 }
             }
         }
-    }
-    
-    override public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
-    {
-        var passThroughDrawer = topDrawer
-        switch scrollView
-        {
-        case topDrawer.scrollView:
-            passThroughDrawer = topDrawer
-        case bottomDrawer.scrollView:
-            passThroughDrawer = bottomDrawer
-        default:
-            return
-        }
-        super.scrollViewDidEndDragging(scrollView, willDecelerate: decelerate)
     }
     
     //MARK: Private functions
@@ -261,7 +247,16 @@ open class DoublePulleyViewController: PulleyViewController
         
         // Bottom inset for safe area / bottomLayoutGuide
         if #available(iOS 11, *) {
+            switch drawer.type
+            {
+            case .bottom:
             drawer.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
+            case .top:
+            drawer.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
+            default:
+                return
+            }
+
         } else {
             self.automaticallyAdjustsScrollViewInsets = false
             switch drawer.type
@@ -276,8 +271,9 @@ open class DoublePulleyViewController: PulleyViewController
                 return
             }
         }
-        
+
         let mostCollapsedHeight = getStopList(for: drawer).min() ?? 0
+        print(mostCollapsedHeight)
         
         let adjustedLeftSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.left : 0.0
         let adjustedRightSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.right : 0.0
@@ -298,7 +294,7 @@ open class DoublePulleyViewController: PulleyViewController
         
         drawer.scrollView.frame = CGRect(x: adjustedLeftSafeArea, y: yOrigin, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: drawerheight)
         
-        print("drawerScrollView frame = \(bottomDrawer.scrollView.frame)")
+        print("\(drawer.type.rawValue) drawerScrollView frame = \(drawer.scrollView.frame)")
         
         drawer.scrollView.addSubview(drawer.shadowView)
         if let drawerBackgroundVisualEffectView = drawer.backgroundVisualEffectView
@@ -311,23 +307,29 @@ open class DoublePulleyViewController: PulleyViewController
         let yContentContainer: CGFloat
         let heightContentContainer: CGFloat = drawer.scrollView.bounds.height + drawer.bounceOverflowMargin
         let cornerToRound: UIRectCorner
+        var contentSize: CGFloat = drawer.scrollView.bounds.height * 2.0 - mostCollapsedHeight + (drawer.bounceOverflowMargin - 5.0)
         switch drawer.type
         {
         case .bottom:
             yContentContainer = drawer.scrollView.bounds.height - mostCollapsedHeight
             cornerToRound =  [.topLeft, .topRight]
+            contentSize -= originSafeArea
         case .top:
-            yContentContainer = mostCollapsedHeight - heightContentContainer
+            yContentContainer = -(drawer.bounceOverflowMargin) + (drawer.bounceOverflowMargin - 5.0) - originSafeArea
             cornerToRound = [.bottomLeft, .bottomRight]
+            contentSize -= 0.0
         default:
             return
         }
         drawer.contentContainer.frame = CGRect(x: 0, y: yContentContainer, width: drawer.scrollView.bounds.width, height: heightContentContainer)
-        print("drawerContentContainer frame = \(drawer.contentContainer.frame)")
+        print("\(drawer.type.rawValue) drawerContentContainer frame = \(drawer.contentContainer.frame)")
         drawer.backgroundVisualEffectView?.frame = drawer.contentContainer.frame
         drawer.shadowView.frame = drawer.contentContainer.frame
-        drawer.scrollView.contentSize = CGSize(width: drawer.scrollView.bounds.width, height: (drawer.scrollView.bounds.height - mostCollapsedHeight) + drawer.scrollView.bounds.height - originSafeArea + (drawer.bounceOverflowMargin - 5.0))
-        print("drawerScrollView contentSize = \(drawer.scrollView.contentSize)")
+//        drawer.scrollView.contentSize = CGSize(width: drawer.scrollView.bounds.width, height: (drawer.scrollView.bounds.height - mostCollapsedHeight) + drawer.scrollView.bounds.height - originSafeArea + (drawer.bounceOverflowMargin - 5.0))
+        drawer.scrollView.contentSize = CGSize(width: drawer.scrollView.bounds.width, height: contentSize)
+        
+        print("drawer.scrollView.contentoffest = \(drawer.scrollView.contentOffset.y)")
+        print("\(drawer.type.rawValue) drawerScrollView contentSize = \(drawer.scrollView.contentSize)")
         
         // Update rounding mask and shadows
         let borderPath = UIBezierPath(roundedRect: drawer.contentContainer.bounds, byRoundingCorners: cornerToRound, cornerRadii: CGSize(width: drawer.cornerRadius, height: drawer.cornerRadius)).cgPath
@@ -343,6 +345,6 @@ open class DoublePulleyViewController: PulleyViewController
         drawer.scrollView.transform = CGAffineTransform.identity
         drawer.contentContainer.transform = drawer.scrollView.transform
         drawer.shadowView.transform = drawer.scrollView.transform
-        setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
+        //setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
     }
 }

@@ -17,6 +17,7 @@ protocol PulleyPassthroughScrollViewDelegate: class {
 class PulleyPassthroughScrollView: UIScrollView {
     
     weak var touchDelegate: PulleyPassthroughScrollViewDelegate?
+    weak var parentDrawer: PulleyDrawer?
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         
@@ -24,7 +25,8 @@ class PulleyPassthroughScrollView: UIScrollView {
             let touchDelegate = touchDelegate,
             touchDelegate.shouldTouchPassthroughScrollView(scrollView: self, point: point)
         {
-            return touchDelegate.viewToReceiveTouch(scrollView: self, point: point).hitTest(touchDelegate.viewToReceiveTouch(scrollView: self, point: point).convert(point, from: self), with: event)
+            let acceptingView = touchDelegate.viewToReceiveTouch(scrollView: self, point: point)
+            return acceptingView.hitTest(acceptingView.convert(point, from: self), with: event)
         }
         
         return super.hitTest(point, with: event)

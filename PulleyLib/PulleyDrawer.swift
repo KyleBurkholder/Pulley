@@ -43,6 +43,7 @@ public class PulleyDrawer
     init(originSide type: DrawerType)
     {
         self.type = type
+
         
         scrollView.bounces = false
         scrollView.clipsToBounds = false
@@ -83,6 +84,7 @@ public class PulleyDrawer
         
         scrollView.addSubview(contentContainer)
         
+        scrollView.parentDrawer = self
     }
     
     //MARK: drawerPosition properties

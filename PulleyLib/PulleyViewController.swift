@@ -730,7 +730,9 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
      - parameter animated: Whether or not to animate the change. (Default: true)
      - parameter completion: A block object to be executed when the animation sequence ends. The Bool indicates whether or not the animations actually finished before the completion handler was called. (Default: nil)
      */
-    public func setDrawerPosition(for drawer: PulleyDrawer, position: PulleyPosition, animated: Bool, completion: PulleyAnimationCompletionBlock? = nil) {
+    public func setDrawerPosition(for loadDrawer: PulleyDrawer? = nil, position: PulleyPosition, animated: Bool, completion: PulleyAnimationCompletionBlock? = nil) {
+        let drawer: PulleyDrawer = loadDrawer ?? bottomDrawer
+        print("setDrawerPosition for drawer: \(drawer.type.rawValue)")
         guard drawer.supportedPositions.contains(position) else {
             
             print("PulleyViewController: You can't set the drawer position to something not supported by the current view controller contained in the drawer. If you haven't already, you may need to implement the PulleyDrawerViewControllerDelegate.")
@@ -746,6 +748,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         
         let direction: CGFloat = drawer.type == .bottom ? 1.0 : -1.0
         
+        let originSafeArea = getOriginSafeArea(for: drawer)
+        print("originSafeArea = \(originSafeArea)")
+        let topDrawerOffset: CGFloat = drawer.type == .bottom ? 0.0 : drawer.scrollView.bounds.height + (drawer.bounceOverflowMargin - 5.0) - originSafeArea
+        print("topDrawerOffset = \(topDrawerOffset)")
         triggerFeedbackGenerator()
         
         if animated && self.view.window != nil
@@ -753,7 +759,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             drawer.isAnimatingPosition = true
             UIView.animate(withDuration: drawer.animationDuration, delay: drawer.animationDelay, usingSpringWithDamping: drawer.animationSpringDamping, initialSpringVelocity: drawer.animationSpringInitialVelocity, options: drawer.animationOptions, animations: { [weak self] () -> Void in
                 
-                drawer.scrollView.setContentOffset(CGPoint(x: 0, y: direction * (stopToMoveTo - lowestStop)), animated: false)
+                drawer.scrollView.setContentOffset(CGPoint(x: 0, y: direction * (stopToMoveTo - lowestStop - topDrawerOffset)), animated: false)
                 
                 // Move backgroundDimmingView to avoid drawer background being darkened
                 self?.backgroundDimmingView.frame = self?.backgroundDimmingViewFrameForDrawerPosition(stopToMoveTo) ?? CGRect.zero
@@ -777,7 +783,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         }
         else
         {
-            drawer.scrollView.setContentOffset(CGPoint(x: 0, y: direction * (stopToMoveTo - lowestStop)), animated: false)
+            drawer.scrollView.setContentOffset(CGPoint(x: 0, y: direction * (stopToMoveTo - lowestStop - topDrawerOffset)), animated: false)
             
             // Move backgroundDimmingView to avoid drawer background being darkened
             backgroundDimmingView.frame = backgroundDimmingViewFrameForDrawerPosition(stopToMoveTo)
@@ -1102,7 +1108,7 @@ extension PulleyViewController: PulleyChestOfDrawers
         
         if drawer.supportedPositions.contains(drawer.drawerPosition)
         {
-            setDrawerPosition(for: bottomDrawer, position: drawer.drawerPosition, animated: true)
+            setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: true)
         }
         else
         {
@@ -1135,14 +1141,21 @@ extension PulleyViewController: PulleyPassthroughScrollViewDelegate {
     
     func shouldTouchPassthroughScrollView(scrollView: PulleyPassthroughScrollView, point: CGPoint) -> Bool
     {
-        return !bottomDrawer.contentContainer.bounds.contains(bottomDrawer.contentContainer.convert(point, from: scrollView))
+        guard let drawer = scrollView.parentDrawer else { return false }
+        print("drawer type in shouldTouchPassthroughScrollView \(drawer.type.rawValue)")
+        return !drawer.contentContainer.bounds.contains(drawer.contentContainer.convert(point, from: scrollView))
     }
     
     func viewToReceiveTouch(scrollView: PulleyPassthroughScrollView, point: CGPoint) -> UIView
     {
-        if bottomDrawer.currentDisplayMode == .drawer
+        let drawer = scrollView.parentDrawer ?? bottomDrawer
+        if drawer.currentDisplayMode == .drawer
         {
-            if bottomDrawer.drawerPosition == .open
+            if drawer.type == DrawerType.top
+            {
+                return bottomDrawer.scrollView
+            }
+            if backgroundDimmingView.alpha > 0.0
             {
                 return backgroundDimmingView
             }
@@ -1151,9 +1164,10 @@ extension PulleyViewController: PulleyPassthroughScrollViewDelegate {
         }
         else
         {
-            if bottomDrawer.contentContainer.bounds.contains(bottomDrawer.contentContainer.convert(point, from: scrollView))
+            if drawer.contentContainer.bounds.contains(drawer.contentContainer.convert(point, from: scrollView))
             {
-                return drawerContentViewController.view
+                //I haven't tested if this works or not.
+                return drawer.contentContainer.subviews.first ?? drawerContentViewController.view
             }
             
             return primaryContentContainer
@@ -1164,11 +1178,8 @@ extension PulleyViewController: PulleyPassthroughScrollViewDelegate {
 extension PulleyViewController: UIScrollViewDelegate {
 
     public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        
-        var passThroughDrawer: PulleyDrawer?
         let drawer: PulleyDrawer
-        
-        if let loadedDrawer = passThroughDrawer
+        if let loadedDrawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer
         {
             drawer = loadedDrawer
         } else
@@ -1245,13 +1256,13 @@ extension PulleyViewController: UIScrollViewDelegate {
     
     public func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         
-        if scrollView == bottomDrawer.scrollView
-        {
+        guard (scrollView as? PulleyPassthroughScrollView)?.parentDrawer != nil else { return }
+        
             lastDragTargetContentOffset = targetContentOffset.pointee
-            
+            //print(lastDragTargetContentOffset)
             // Halt intertia
             targetContentOffset.pointee = scrollView.contentOffset
-        }
+
     }
     
     public func scrollViewDidScroll(_ scrollView: UIScrollView)
@@ -1271,7 +1282,7 @@ extension PulleyViewController: UIScrollViewDelegate {
 
             let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
             
-            print(scrollView.contentOffset.y)
+            //print(scrollView.contentOffset.y)
             if (scrollView.contentOffset.y - originSafeArea) > revealHeight - lowestStop && drawer.supportedPositions.contains(.open)
             {
                 // Calculate percentage between partial and full reveal
