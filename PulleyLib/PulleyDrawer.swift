@@ -194,6 +194,12 @@ public class PulleyDrawer
     }
     
     //MARK: Margin properties
+    var contentOffset: CGFloat
+    {
+        let originSafeArea: CGFloat = delegate?.getOriginSafeArea(for: self) ?? 0.0
+        return type == .bottom ? 0.0 : scrollView.bounds.height + (bounceOverflowMargin - 5.0) - originSafeArea
+    }
+    
     public let bounceOverflowMargin: CGFloat = 20.0
     
     /// The inset from the top safe area when fully open. NOTE: When in 'leftSide' displayMode this is the distance to the bottom of the screen.

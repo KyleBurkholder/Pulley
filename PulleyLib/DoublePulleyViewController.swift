@@ -200,23 +200,6 @@ open class DoublePulleyViewController: PulleyViewController
 //        maskBackgroundDimmingView()
     }
     
-    override public func scrollViewDidScroll(_ scrollView: UIScrollView)
-    {
-
-//        switch scrollView {
-//        case bottomDrawer.scrollView:
-//            scrollViewDidScroll(for: bottomDrawer, scrollView)
-//        case topDrawer.scrollView:
-//            scrollViewDidScroll(for: topDrawer, scrollView)
-//        default:
-//            return
-//        }
-    }
-    
-    override public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-                print("drawer.scrollView.contentoffest = \((scrollView as? PulleyPassthroughScrollView)!.parentDrawer!.scrollView.contentOffset.y)")
-    }
-    
     /**
      Update the supported drawer positions allows by the Pulley Drawer
      */
@@ -345,6 +328,6 @@ open class DoublePulleyViewController: PulleyViewController
         drawer.scrollView.transform = CGAffineTransform.identity
         drawer.contentContainer.transform = drawer.scrollView.transform
         drawer.shadowView.transform = drawer.scrollView.transform
-        //setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
+//        setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
     }
 }
