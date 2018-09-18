@@ -9,11 +9,26 @@
 public extension UIViewController {
 
     /// If this viewController pertences to a PulleyViewController, return it.
-    public var pulleyViewController: PulleyViewController? {
+    public var pulleyViewController: PulleyViewController?
+    {
         var parentVC = parent
         while parentVC != nil {
             if let pulleyViewController = parentVC as? PulleyViewController {
                 return pulleyViewController
+            }
+            parentVC = parentVC?.parent
+        }
+        return nil
+    }
+    
+    public var doublePulleyViewController: DoublePulleyViewController?
+    {
+        var parentVC = parent
+        while parentVC != nil
+        {
+            if let doublePulleyViewController = parentVC as? DoublePulleyViewController
+            {
+                return doublePulleyViewController
             }
             parentVC = parentVC?.parent
         }

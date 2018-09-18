@@ -13,6 +13,8 @@ open class DoublePulleyViewController: PulleyViewController
     /// When using with Interface Builder only! Connect a containing view to this outlet.
     @IBOutlet public var topDrawerContentContainerView: UIView!
     
+    public var drawers: [PulleyDrawer] = []
+    
     // Public
     public var topDrawer: PulleyDrawer = PulleyDrawer(originSide: .top)
 
@@ -20,7 +22,7 @@ open class DoublePulleyViewController: PulleyViewController
     public internal(set) var topDrawerContentViewController: UIViewController! {
         willSet {
             
-            guard let controller = drawerContentViewController else {
+            guard let controller = topDrawerContentViewController else {
                 return
             }
             
@@ -31,7 +33,7 @@ open class DoublePulleyViewController: PulleyViewController
         
         didSet {
             
-            guard let controller = drawerContentViewController else {
+            guard let controller = topDrawerContentViewController else {
                 return
             }
             
@@ -59,6 +61,8 @@ open class DoublePulleyViewController: PulleyViewController
         }
     }
     
+    private var inViewDidLayoutSubview: Bool = false
+    
     /**
      Initialize the drawer controller programmtically.
      
@@ -75,6 +79,8 @@ open class DoublePulleyViewController: PulleyViewController
     {
         super.init(contentViewController: contentViewController, drawerViewController: bottomDrawerViewController)
         ({self.topDrawerContentViewController = topDrawerViewController})()
+        drawers.append(bottomDrawer)
+        drawers.append(topDrawer)
     }
     
     /**
@@ -89,10 +95,21 @@ open class DoublePulleyViewController: PulleyViewController
     required public init?(coder aDecoder: NSCoder)
     {
         super.init(coder: aDecoder)
+        drawers.append(bottomDrawer)
+        drawers.append(topDrawer)
+
     }
+    
+    //MARK: Overridden functions
     
     override open func loadView()
     {
+        //Todo: Remove when done
+        UIApplication.shared.windows.first?.layer.speed = 0.1
+        
+        backgroundDimmingView.topDrawerView = backgroundDimmingView.setupView()
+        backgroundDimmingView.topDrawerDelegate = topDrawer
+        
         super.loadView()
         
         // IB Support
@@ -104,6 +121,8 @@ open class DoublePulleyViewController: PulleyViewController
         topDrawer.scrollView.delegate = self
         topDrawer.scrollView.touchDelegate = self
         topDrawer.delegate = self
+        
+        
         
         self.view.addSubview(topDrawer.scrollView)
     }
@@ -139,6 +158,7 @@ open class DoublePulleyViewController: PulleyViewController
     
     override open func viewDidLayoutSubviews()
     {
+        inViewDidLayoutSubview = true
         super.viewDidLayoutSubviews()
         // Make sure our view controller views are subviews of the right view (Resolves #21 issue with changing the presentation context)
         
@@ -185,19 +205,18 @@ open class DoublePulleyViewController: PulleyViewController
         bottomDrawer.currentDisplayMode = .drawer
         topDrawer.currentDisplayMode = .drawer
         
-        didLayoutSubviews(for: bottomDrawer)
         didLayoutSubviews(for: topDrawer)
-        
-        
-        //TODO: Make maskBackroundDimmingView work with two Drawers
-//        backgroundDimmingView.frame = CGRect(x: 0.0, y: 0.0, width: self.view.bounds.width, height: self.view.bounds.height + drawer.scrollView.contentSize.height)
-//        // I don't think that I need this? on height. Or I do.
-//        print("backgroundDimmingView frame = \(backgroundDimmingView.frame)")
-//        
-//        backgroundDimmingView.isHidden = false
-//        
-//
-//        maskBackgroundDimmingView()
+        didLayoutSubviews(for: bottomDrawer)
+
+        backgroundDimmingView.frame = CGRect(x: 0.0, y: 0.0, width: self.view.bounds.width, height: self.view.bounds.height)
+
+        backgroundDimmingView.isHidden = false
+
+        backgroundDimmingView.setNeedsLayout()
+        backgroundDimmingView.layoutIfNeeded()
+        backgroundDimmingView.updateMask(with: bottomDrawer.contentContainer.convert(bottomDrawer.contentContainer.bounds, to: backgroundDimmingView))
+        backgroundDimmingView.updateTopMask(with: topDrawer.contentContainer.convert(topDrawer.contentContainer.bounds, to: backgroundDimmingView))
+        inViewDidLayoutSubview = false
     }
     
     /**
@@ -222,6 +241,108 @@ open class DoublePulleyViewController: PulleyViewController
         }
     }
     
+    override func dimmingViewTapRecognizerAction(gestureRecognizer: UITapGestureRecognizer)
+    {
+        super.dimmingViewTapRecognizerAction(gestureRecognizer: gestureRecognizer)
+        if gestureRecognizer == dimmingViewTapRecognizer
+        {
+            if gestureRecognizer.state == .ended
+            {
+                self.setDrawerPosition(for: topDrawer, position: .collapsed, animated: true)
+            }
+        }
+    }
+    
+    override public func setDrawerPosition(for loadDrawer: PulleyDrawer?, position: PulleyPosition, animated: Bool, completion: PulleyAnimationCompletionBlock? = nil)
+    {
+        var passCompletion = completion
+        if animated
+        {
+            let displayLink = CADisplayLink(target: self, selector: #selector(displayFunction))
+            displayLink.add(to: .current, forMode: .commonModes)
+            passCompletion = { [weak self] (success: Bool) -> Void in
+                //TODO: Check to make sure this completion is actually called.
+                completion?(success)
+                guard let safeSelf = self else
+                {
+                    print("Self was not here on animation closure call.")
+                    return
+                }
+                var clearDisplayLink: Bool = true
+                    for checkDrawer in safeSelf.drawers
+                    {
+                        if checkDrawer.isAnimatingPosition
+                        {
+                            clearDisplayLink = false
+                        }
+                    }
+                if clearDisplayLink
+                {
+                    displayLink.invalidate()
+                }
+            }
+        }
+        
+        super.setDrawerPosition(for: loadDrawer, position: position, animated: animated, completion: passCompletion)
+    }
+    
+    
+    
+    override public func scrollViewDidScroll(_ scrollView: UIScrollView)
+    {
+        super.scrollViewDidScroll(scrollView)
+        print("scollViewDidScroll (DPVC)")
+        checkIfDrawersOverlap(scrollView: scrollView)
+
+    }
+    
+    @objc func displayFunction()
+    {
+        for checkDrawer in drawers
+        {
+            if checkDrawer.isAnimatingPosition, !checkDrawer.isSnapbackAnimation
+            {
+                checkIfDrawersOverlap(scrollView: checkDrawer.scrollView)
+            }
+        }
+
+    }
+    
+    func checkIfDrawersOverlap(scrollView: UIScrollView)
+    {
+        let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
+        
+//        let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollView.contentOffset.y : drawer.contentOffset - scrollView.contentOffset.y
+        let scrollViewLayerY = scrollView.layer.presentation()?.bounds.origin.y ?? scrollView.contentOffset.y
+        let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollViewLayerY : drawer.contentOffset - scrollViewLayerY
+        
+        let drawersToCheck = drawers.filter({$0 != drawer})
+        let movingDrawerLine = drawerContentOffset
+        let remainingSpace = view.bounds.height - movingDrawerLine
+        for checkDrawer in drawersToCheck
+        {
+            var previousStopValue = stopValue(for: checkDrawer.drawerPosition, from: checkDrawer)
+            var lowerStopList = getStopList(for: checkDrawer).filter({$0 < previousStopValue})
+            var currentStopValue = previousStopValue
+            
+            if currentStopValue > remainingSpace + (drawer.bounceOverflowMargin - 5.0) {
+                repeat {
+                    previousStopValue = currentStopValue
+                    if let max = lowerStopList.max(), let positionOfMax = lowerStopList.index(of: max)
+                    {
+                        let currentMax = lowerStopList.remove(at: positionOfMax)
+                        currentStopValue = currentMax
+                    }
+                } while currentStopValue > remainingSpace && currentStopValue != previousStopValue
+                if previousStopValue != currentStopValue, !inViewDidLayoutSubview
+                {
+                    checkDrawer.isSnapbackAnimation = true
+                    setDrawerPosition(for: checkDrawer, position: drawerPosition(for: checkDrawer, at: currentStopValue), animated: true)
+                }
+            }
+        }
+    }
+    
     //MARK: Private functions
     
     private func didLayoutSubviews(for drawer: PulleyDrawer)
@@ -230,16 +351,7 @@ open class DoublePulleyViewController: PulleyViewController
         
         // Bottom inset for safe area / bottomLayoutGuide
         if #available(iOS 11, *) {
-            switch drawer.type
-            {
-            case .bottom:
             drawer.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
-            case .top:
-            drawer.scrollView.contentInsetAdjustmentBehavior = .scrollableAxes
-            default:
-                return
-            }
-
         } else {
             self.automaticallyAdjustsScrollViewInsets = false
             switch drawer.type
@@ -256,7 +368,6 @@ open class DoublePulleyViewController: PulleyViewController
         }
 
         let mostCollapsedHeight = getStopList(for: drawer).min() ?? 0
-        print(mostCollapsedHeight)
         
         let adjustedLeftSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.left : 0.0
         let adjustedRightSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.right : 0.0
@@ -308,10 +419,10 @@ open class DoublePulleyViewController: PulleyViewController
         print("\(drawer.type.rawValue) drawerContentContainer frame = \(drawer.contentContainer.frame)")
         drawer.backgroundVisualEffectView?.frame = drawer.contentContainer.frame
         drawer.shadowView.frame = drawer.contentContainer.frame
-//        drawer.scrollView.contentSize = CGSize(width: drawer.scrollView.bounds.width, height: (drawer.scrollView.bounds.height - mostCollapsedHeight) + drawer.scrollView.bounds.height - originSafeArea + (drawer.bounceOverflowMargin - 5.0))
+        drawer.backgroundMask.frame = drawer.contentContainer.frame
         drawer.scrollView.contentSize = CGSize(width: drawer.scrollView.bounds.width, height: contentSize)
         
-        print("drawer.scrollView.contentoffest = \(drawer.scrollView.contentOffset.y)")
+        print("\(drawer.type.rawValue) drawer.scrollView.contentoffest = \(drawer.scrollView.contentOffset.y)")
         print("\(drawer.type.rawValue) drawerScrollView contentSize = \(drawer.scrollView.contentSize)")
         
         // Update rounding mask and shadows
@@ -322,12 +433,25 @@ open class DoublePulleyViewController: PulleyViewController
         cardMaskLayer.frame = drawer.contentContainer.bounds
         cardMaskLayer.fillColor = UIColor.white.cgColor
         cardMaskLayer.backgroundColor = UIColor.clear.cgColor
+        
+        let secondCardMaskLayer = CAShapeLayer()
+        secondCardMaskLayer.path = borderPath
+        secondCardMaskLayer.frame = drawer.contentContainer.bounds
+        secondCardMaskLayer.fillColor = UIColor.white.cgColor
+        secondCardMaskLayer.backgroundColor = UIColor.clear.cgColor
+        drawer.backgroundMask.layer.mask = secondCardMaskLayer
         drawer.contentContainer.layer.mask = cardMaskLayer
+
         drawer.shadowView.layer.shadowPath = borderPath
+        
+        let repLayer = CAReplicatorLayer(layer: primaryContentContainer.layer)
+        
+        drawer.backgroundMask.layer.addSublayer(repLayer)
         
         drawer.scrollView.transform = CGAffineTransform.identity
         drawer.contentContainer.transform = drawer.scrollView.transform
         drawer.shadowView.transform = drawer.scrollView.transform
-//        setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
+
+        setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
     }
 }

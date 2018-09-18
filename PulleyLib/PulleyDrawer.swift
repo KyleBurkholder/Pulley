@@ -12,6 +12,8 @@ protocol PulleyChestOfDrawers: AnyObject
 {
     func drawerPositionSet()
     
+    func producePrimaryView() -> UIView
+    
     func didSetBackgroundVisualEffectView(for drawer: PulleyDrawer)
     
     func getLowestStop(for drawer: PulleyDrawer) -> CGFloat
@@ -29,11 +31,45 @@ protocol PulleyChestOfDrawers: AnyObject
     func calculateOpenDrawerHeight(for drawer: PulleyDrawer) -> CGFloat
 }
 
-public class PulleyDrawer
+public class PulleyDrawer: Hashable
 {
+    
+    //MARK: Properties
+    
+    public var hashValue: Int
+    {
+        return contentContainer.hashValue ^ shadowView.hashValue ^ scrollView.hashValue &* 13
+    }
+    
+    public static func == (lhs: PulleyDrawer, rhs: PulleyDrawer) -> Bool
+    {
+        return lhs.hashValue == rhs.hashValue
+    }
+    
     let contentContainer: UIView = UIView()
     let shadowView: UIView = UIView()
     let scrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
+//    var backgroundView: UIView = UIView()
+////    {
+////        guard let primaryView = delegate?.producePrimaryView(), #available(iOS 10.0, *) else {
+////            print("No primaryView found")
+////            return UIView()
+////        }
+//////
+//////        let renderer = UIGraphicsImageRenderer(size: primaryView.bounds.size)
+//////        let imageOfPrimary = renderer.image {
+//////            ctx in
+//////            primaryView.drawHierarchy(in: primaryView.bounds, afterScreenUpdates: true)
+//////        }
+//////        return UIImageView(image: imageOfPrimary)
+////        let newView = UIView(frame: primaryView.frame)
+////        print("primary frame = \(primaryView.frame)")
+////        newView.backgroundColor = UIColor.green
+////        return newView
+////
+////
+////    }
+    let backgroundMask: UIView = UIView()
     let type: DrawerType
     
     weak var delegate: PulleyChestOfDrawers?
@@ -44,24 +80,24 @@ public class PulleyDrawer
     {
         self.type = type
 
-        
         scrollView.bounces = false
         scrollView.clipsToBounds = false
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
+        scrollView.backgroundColor = UIColor.clear
         
         scrollView.delaysContentTouches = delaysContentTouches
         scrollView.canCancelContentTouches = canCancelContentTouches
         
         //TODO: Remove the coloring of the the scrollView when I get everything working
-        switch self.type {
-        case .bottom:
-                    scrollView.backgroundColor = UIColor.red
-        case .top:
-                    scrollView.backgroundColor = UIColor.purple
-        default:
-            return
-        }
+//        switch self.type {
+//        case .bottom:
+//                    scrollView.backgroundColor = UIColor.red
+//        case .top:
+//                    scrollView.backgroundColor = UIColor.purple
+//        default:
+//            return
+//        }
 
         scrollView.decelerationRate = UIScrollViewDecelerationRateFast
         scrollView.scrollsToTop = false
@@ -73,6 +109,8 @@ public class PulleyDrawer
         contentContainer.backgroundColor = UIColor.clear
         
         backgroundVisualEffectView?.clipsToBounds = true
+        
+        scrollView.addSubview(backgroundMask)
         
         scrollView.addSubview(shadowView)
         
@@ -140,7 +178,7 @@ public class PulleyDrawer
         return kPulleyDefaultCollapsedHeight
     }
     
-    var standardlHeight: CGFloat {
+    var standardHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
             return drawerDelegate?.standardDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultStandardHeight
@@ -169,7 +207,7 @@ public class PulleyDrawer
         if drawerPosition == .closed {
             return 0.0
         } else {
-            return scrollView.bounds.height
+            return type == .bottom ? scrollView.contentOffset.y : contentOffset - scrollView.contentOffset.y
         }
     }
     
@@ -198,6 +236,11 @@ public class PulleyDrawer
     {
         let originSafeArea: CGFloat = delegate?.getOriginSafeArea(for: self) ?? 0.0
         return type == .bottom ? 0.0 : scrollView.bounds.height + (bounceOverflowMargin - 5.0) - originSafeArea
+    }
+    
+    public var originSafeArea: CGFloat
+    {
+        return delegate?.getOriginSafeArea(for: self) ?? 0.0
     }
     
     public let bounceOverflowMargin: CGFloat = 20.0
@@ -310,7 +353,8 @@ public class PulleyDrawer
     //MARK: Animation constants
     
     /// The animation duration for setting the drawer position
-    public var animationDuration: TimeInterval = 0.3
+    public var animationDuration: CGFloat = 1.5
+    
     
     /// The animation delay for setting the drawer position
     public var animationDelay: TimeInterval = 0.0
@@ -325,7 +369,17 @@ public class PulleyDrawer
     public var animationOptions: UIViewAnimationOptions = [.curveEaseInOut]
     
     public var isAnimatingPosition: Bool = false
+    {
+        didSet
+        {
+            if isAnimatingPosition == false
+            {
+                isSnapbackAnimation = false
+            }
+        }
+    }
     
+    public var isSnapbackAnimation: Bool = false
     
     //MARK: Misc properties
     
@@ -360,4 +414,24 @@ public class PulleyDrawer
     {
         scrollView.isScrollEnabled = allowsUserDrawerPositionChange && supportedPositions.count > 1
     }
+}
+
+extension PulleyDrawer: DrawerDelegate
+{
+    func returnCornerRadius() -> CGFloat
+    {
+        return cornerRadius
+    }
+    
+    func returnDrawerOverFlowHeight() -> CGFloat
+    {
+        return bounceOverflowMargin
+    }
+    
+    func returnDrawerPosition() -> CGFloat
+    {
+        return visibleDrawerHeight
+    }
+    
+    
 }
