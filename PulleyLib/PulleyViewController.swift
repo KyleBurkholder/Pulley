@@ -808,7 +808,14 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             CATransaction.setCompletionBlock({[weak self] in
                 print("animation complete")
                 drawer.isAnimatingPosition = false
-                self?.backgroundDimmingView.isAnimating = false
+                if drawer.type == .bottom
+                {
+
+                   self?.backgroundDimmingView.bottomDrawerCompletionHander?()
+                } else
+                {
+                    self?.backgroundDimmingView.topDrawerCompletionHander?()
+                }
                 self?.syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode()
                 completion?(true)
             })
@@ -1333,6 +1340,15 @@ extension PulleyViewController: UIScrollViewDelegate {
 
         let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
         let originSafeArea = getOriginSafeArea(for: drawer)
+        
+        if drawer.isAnimatingPosition
+        {
+            if drawer.type == .bottom {
+                backgroundDimmingView.bottomDrawerCompletionHander?()
+            } else{
+                backgroundDimmingView.topDrawerCompletionHander?()
+            }
+        }
         
         
         //TODO: This might not work with two drawers

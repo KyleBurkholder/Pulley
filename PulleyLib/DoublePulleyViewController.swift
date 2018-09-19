@@ -104,8 +104,8 @@ open class DoublePulleyViewController: PulleyViewController
     
     override open func loadView()
     {
-        //Todo: Remove when done
-        UIApplication.shared.windows.first?.layer.speed = 0.1
+        //TODO: Remove when done
+        UIApplication.shared.windows.first?.layer.speed = 0.5
         
         backgroundDimmingView.topDrawerView = backgroundDimmingView.setupView()
         backgroundDimmingView.topDrawerDelegate = topDrawer

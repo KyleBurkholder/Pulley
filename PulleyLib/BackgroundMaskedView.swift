@@ -27,6 +27,14 @@ class BackgroundMaskedView: UIView
     
     var isAnimating: Bool = false
     
+    var bottomDrawerCompletionHander: (() -> Void)?
+    
+    var topDrawerCompletionHander: (() -> Void)?
+    
+    //TODO: Remove when done debugging
+    
+    var numberOfTimesAnimated: Int = 0
+    
     var heightStartDim: CGFloat
     {
         return self.bounds.height * precentStarDim
@@ -47,7 +55,7 @@ class BackgroundMaskedView: UIView
     let fillView: UIView =
     {
         let newView = UIView()
-        newView.backgroundColor = UIColor.red
+        newView.backgroundColor = UIColor.green
         newView.clipsToBounds = true
         newView.layer.anchorPoint.y = 0.0
         return newView
@@ -150,19 +158,23 @@ class BackgroundMaskedView: UIView
     override func layoutSubviews()
     {
         print("BackgroundMaskedView layoutSubviews called")
+        
         self.addSubview(fillView)
         self.addSubview(bottomDrawerView)
         let overflowbounds = self.bounds.applying(CGAffineTransform(scaleX: 1.0, y: 3.0)).offsetBy(dx: 0.0, dy: -self.bounds.height)
         let dividedRects = overflowbounds.divided(atDistance: self.bounds.height + bottomDrawerHeight, from: .maxYEdge)
         
         bottomDrawerView.frame = dividedRects.slice
+        print("bottomDrawerView.frame: \(bottomDrawerView.frame)")
         
         if let topView = topDrawerView
         {
             self.addSubview(topView)
             let secondDividedRects = dividedRects.remainder.divided(atDistance: self.bounds.height + topDrawerHeight, from: .minYEdge)
-            topDrawerView?.frame = secondDividedRects.slice
+            topView.frame = secondDividedRects.slice
             fillView.frame = secondDividedRects.remainder
+            print("topDrawerView.frame: \(topView.frame)")
+            print("fillView.frame: \(fillView.frame)")
         }
         else
         {
@@ -226,13 +238,16 @@ class BackgroundMaskedView: UIView
     
     func animateMask(for drawer: PulleyDrawer, points: CGFloat)
     {
+        numberOfTimesAnimated += 1
+        print("Animation number \(numberOfTimesAnimated)")
         isAnimating = true
         let dimmingDrawerView: UIView
-        let fillKeyPath: String
-        let drawerKeyPath: String
         let drawerMove: CGFloat
         let uniqueString = NSUUID().uuidString
+        var fillViewCompletion:  (() -> Void)? = nil
         print(uniqueString.description)
+        print(points)
+        
         switch drawer.type
         {
         case .bottom:
@@ -250,14 +265,29 @@ class BackgroundMaskedView: UIView
                 return
             }
             
+            
             let fillPositionAnimation = CASpringAnimation(keyPath: "position.y", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
             fillPositionAnimation.isAdditive = true
-            fillPositionAnimation.fromValue = points
-            fillPositionAnimation.toValue = 0.0
+            fillPositionAnimation.fromValue = 0.0
+            fillPositionAnimation.toValue = -points
             fillPositionAnimation.duration = fillPositionAnimation.settlingDuration
-            fillView.layer.position.y = fillView.layer.position.y + points
+            
+            fillPositionAnimation.fillMode = kCAFillModeForwards
+            fillPositionAnimation.isRemovedOnCompletion = false
             
             fillView.layer.add(fillPositionAnimation, forKey: "position of fillView \(uniqueString)")
+            
+            fillViewCompletion =
+                {[weak self, points] in
+                    guard let safeSelf = self else
+                    {
+                        print("Can't Complete fillViewPositionCompletion because self is gone")
+                        return
+                    }
+                safeSelf.fillView.layer.position.y = safeSelf.fillView.layer.position.y + points
+                safeSelf.fillView.layer.removeAnimation(forKey: "position of fillView \(uniqueString)")
+            }
+            
             dimmingDrawerView = topDrawerView
         default:
             return
@@ -265,21 +295,52 @@ class BackgroundMaskedView: UIView
         
         let drawerAnimation = CASpringAnimation(keyPath: "position.y", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
         drawerAnimation.isAdditive = true
-        drawerAnimation.fromValue = points
-        drawerAnimation.toValue = 0.0
+        drawerAnimation.fromValue = 0.0
+        drawerAnimation.toValue = -points
         drawerAnimation.duration = drawerAnimation.settlingDuration
-        dimmingDrawerView.layer.position.y = dimmingDrawerView.layer.position.y - points
+        
+        drawerAnimation.fillMode = kCAFillModeForwards
+        drawerAnimation.isRemovedOnCompletion = false
         
         dimmingDrawerView.layer.add(drawerAnimation, forKey: "position of drawer \(uniqueString)")
         
+        
         let fillBoundsAnimation = CASpringAnimation(keyPath: "bounds.size.height", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
         fillBoundsAnimation.isAdditive = true
-        fillBoundsAnimation.fromValue = drawerMove
-        fillBoundsAnimation.toValue = 0.0
+        fillBoundsAnimation.fromValue = 0.0
+        fillBoundsAnimation.toValue = -drawerMove
         fillBoundsAnimation.duration = fillBoundsAnimation.settlingDuration
-        fillView.layer.bounds.size.height = fillView.layer.bounds.size.height - drawerMove
+        
+        fillBoundsAnimation.fillMode = kCAFillModeForwards
+        fillBoundsAnimation.isRemovedOnCompletion = false
         
         fillView.layer.add(fillBoundsAnimation, forKey: "bounds for fillView \(uniqueString)")
+
+        let completionHander =
+            { [weak self, points] in
+                
+                print("completionChanges")
+                fillViewCompletion?()
+                guard let safeSelf = self else
+                {
+                    print("Can't Complete fillViewPositionCompletion because self is gone")
+                    return
+                }
+                print(dimmingDrawerView.layer.position.y)
+                dimmingDrawerView.layer.position.y = dimmingDrawerView.layer.position.y - points
+                dimmingDrawerView.layer.removeAnimation(forKey: "position of drawer \(uniqueString)")
+                print(dimmingDrawerView.layer.position.y)
+                safeSelf.fillView.layer.bounds.size.height = safeSelf.fillView.layer.bounds.size.height + drawerMove
+                safeSelf.fillView.layer.removeAnimation(forKey: "bounds for fillView \(uniqueString)")
+        }
+        switch drawer.type {
+        case .bottom:
+            bottomDrawerCompletionHander = completionHander
+        case .top:
+            topDrawerCompletionHander = completionHander
+        default:
+            return
+        }
     }
     
     func dimProgress() -> CGFloat

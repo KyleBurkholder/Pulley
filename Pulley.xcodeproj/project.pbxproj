@@ -8,7 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		020066692125B67C00751413 /* DoublePulleyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020066682125B67C00751413 /* DoublePulleyViewController.swift */; };
+		021529782138D94D00FEAB4B /* UISpringTimingParameters+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021529772138D94D00FEAB4B /* UISpringTimingParameters+Convenience.swift */; };
+		0215297A2138DCF100FEAB4B /* CASpringAnimation+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021529792138DCF100FEAB4B /* CASpringAnimation+Convenience.swift */; };
 		022C9AE221126BDE00CB3B59 /* StaticVariables+Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022C9AE121126BDE00CB3B59 /* StaticVariables+Enums.swift */; };
+		02AC656921440E5A00C08668 /* BackgroundMaskedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02AC656821440E5A00C08668 /* BackgroundMaskedView.swift */; };
 		02E28566210FF797004391BD /* PulleyDrawer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E28565210FF797004391BD /* PulleyDrawer.swift */; };
 		355DBF171E40EA4300671CDD /* Pulley.h in Headers */ = {isa = PBXBuildFile; fileRef = 355DBF151E40EA4300671CDD /* Pulley.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		355DBF1A1E40EA4300671CDD /* Pulley.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 355DBF131E40EA4300671CDD /* Pulley.framework */; };
@@ -52,7 +55,10 @@
 
 /* Begin PBXFileReference section */
 		020066682125B67C00751413 /* DoublePulleyViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DoublePulleyViewController.swift; path = PulleyLib/DoublePulleyViewController.swift; sourceTree = SOURCE_ROOT; };
+		021529772138D94D00FEAB4B /* UISpringTimingParameters+Convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UISpringTimingParameters+Convenience.swift"; sourceTree = "<group>"; };
+		021529792138DCF100FEAB4B /* CASpringAnimation+Convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CASpringAnimation+Convenience.swift"; path = "PulleyLib/CASpringAnimation+Convenience.swift"; sourceTree = SOURCE_ROOT; };
 		022C9AE121126BDE00CB3B59 /* StaticVariables+Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StaticVariables+Enums.swift"; path = "PulleyLib/StaticVariables+Enums.swift"; sourceTree = SOURCE_ROOT; };
+		02AC656821440E5A00C08668 /* BackgroundMaskedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackgroundMaskedView.swift; path = PulleyLib/BackgroundMaskedView.swift; sourceTree = SOURCE_ROOT; };
 		02E28565210FF797004391BD /* PulleyDrawer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PulleyDrawer.swift; path = PulleyLib/PulleyDrawer.swift; sourceTree = SOURCE_ROOT; };
 		355DBF131E40EA4300671CDD /* Pulley.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pulley.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		355DBF151E40EA4300671CDD /* Pulley.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Pulley.h; sourceTree = "<group>"; };
@@ -102,7 +108,10 @@
 				022C9AE121126BDE00CB3B59 /* StaticVariables+Enums.swift */,
 				E15E853020BE56B900800173 /* UIViewController+PulleyViewController.swift */,
 				C6C51DDC1F5108980079B57F /* UIView+constrainToParent.swift */,
+				021529772138D94D00FEAB4B /* UISpringTimingParameters+Convenience.swift */,
+				021529792138DCF100FEAB4B /* CASpringAnimation+Convenience.swift */,
 				355DBF161E40EA4300671CDD /* Info.plist */,
+				02AC656821440E5A00C08668 /* BackgroundMaskedView.swift */,
 			);
 			path = Pulley;
 			sourceTree = "<group>";
@@ -267,9 +276,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				021529782138D94D00FEAB4B /* UISpringTimingParameters+Convenience.swift in Sources */,
+				0215297A2138DCF100FEAB4B /* CASpringAnimation+Convenience.swift in Sources */,
 				020066692125B67C00751413 /* DoublePulleyViewController.swift in Sources */,
 				E15E853120BE56B900800173 /* UIViewController+PulleyViewController.swift in Sources */,
 				02E28566210FF797004391BD /* PulleyDrawer.swift in Sources */,
+				02AC656921440E5A00C08668 /* BackgroundMaskedView.swift in Sources */,
 				355DBF201E40EA5C00671CDD /* PulleyPassthroughScrollView.swift in Sources */,
 				022C9AE221126BDE00CB3B59 /* StaticVariables+Enums.swift in Sources */,
 				355DBF211E40EA5F00671CDD /* PulleyViewController.swift in Sources */,
