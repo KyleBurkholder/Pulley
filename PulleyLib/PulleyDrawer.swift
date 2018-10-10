@@ -49,27 +49,6 @@ public class PulleyDrawer: Hashable
     let contentContainer: UIView = UIView()
     let shadowView: UIView = UIView()
     let scrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
-//    var backgroundView: UIView = UIView()
-////    {
-////        guard let primaryView = delegate?.producePrimaryView(), #available(iOS 10.0, *) else {
-////            print("No primaryView found")
-////            return UIView()
-////        }
-//////
-//////        let renderer = UIGraphicsImageRenderer(size: primaryView.bounds.size)
-//////        let imageOfPrimary = renderer.image {
-//////            ctx in
-//////            primaryView.drawHierarchy(in: primaryView.bounds, afterScreenUpdates: true)
-//////        }
-//////        return UIImageView(image: imageOfPrimary)
-////        let newView = UIView(frame: primaryView.frame)
-////        print("primary frame = \(primaryView.frame)")
-////        newView.backgroundColor = UIColor.green
-////        return newView
-////
-////
-////    }
-    let backgroundMask: UIView = UIView()
     let type: DrawerType
     
     weak var delegate: PulleyChestOfDrawers?
@@ -110,7 +89,15 @@ public class PulleyDrawer: Hashable
         
         backgroundVisualEffectView?.clipsToBounds = true
         
-        scrollView.addSubview(backgroundMask)
+        if let backgroundView = backgroundSnapShotView
+        {
+            scrollView.addSubview(backgroundView)
+            if let contentView = snapShotContentView
+            {
+                contentView.layer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                backgroundView.addSubview(contentView)
+            }
+        }
         
         scrollView.addSubview(shadowView)
         
@@ -209,6 +196,15 @@ public class PulleyDrawer: Hashable
         } else {
             return type == .bottom ? scrollView.contentOffset.y : contentOffset - scrollView.contentOffset.y
         }
+    }
+    
+    public var presentationDrawerHeight: CGFloat?
+    {
+        if let scrollViewPresentation = scrollView.layer.presentation()
+        {
+        return type == .bottom ? scrollViewPresentation.bounds.origin.y : contentOffset - scrollViewPresentation.bounds.origin.y
+        }
+        return nil
     }
     
     /// The display mode for Pulley. Default is 'bottomDrawer', which preserves the previous behavior of Pulley. If you want it to adapt automatically, choose 'automatic'. The current display mode is available by using the 'currentDisplayMode' property.
@@ -369,15 +365,6 @@ public class PulleyDrawer: Hashable
     public var animationOptions: UIViewAnimationOptions = [.curveEaseInOut]
     
     public var isAnimatingPosition: Bool = false
-    {
-        didSet
-        {
-            if isAnimatingPosition == false
-            {
-                isSnapbackAnimation = false
-            }
-        }
-    }
     
     public var isSnapbackAnimation: Bool = false
     
@@ -404,9 +391,40 @@ public class PulleyDrawer: Hashable
             backgroundVisualEffectView?.removeFromSuperview()
         }
         didSet {
-            delegate?.didSetBackgroundVisualEffectView(for: self)
+            if let drawerBackgroundVisualEffectView = backgroundVisualEffectView
+            {
+                scrollView.insertSubview(drawerBackgroundVisualEffectView, aboveSubview: shadowView)
+                drawerBackgroundVisualEffectView.clipsToBounds = true
+                drawerBackgroundVisualEffectView.layer.cornerRadius = cornerRadius
+                //TODO: Turn this into just a setNeedsLayout if view is loaded
+                delegate?.didSetBackgroundVisualEffectView(for: self)
+            }
         }
     }
+    
+    var backgroundSnapShotView: UIView? = UIView()
+    {
+        willSet {
+            backgroundSnapShotView?.removeFromSuperview()
+        }
+        didSet {
+            if let drawerBackgroundVisualEffectView = backgroundSnapShotView
+            {
+                //TODO: This needs to be completely reworked to go with backgrounSnapShotView
+//                scrollView.insertSubview(drawerBackgroundVisualEffectView, aboveSubview: shadowView)
+//                drawerBackgroundVisualEffectView.clipsToBounds = true
+//                drawerBackgroundVisualEffectView.layer.cornerRadius = cornerRadius
+//                //TODO: Turn this into just a setNeedsLayout if view is loaded
+//                delegate?.didSetBackgroundVisualEffectView(for: self)
+            } else
+            {
+                snapShotContentView = nil
+            }
+        }
+    }
+    
+    var snapShotContentView: UIView? = UIView()
+
     
     //MARK: Internal functions
     
@@ -418,6 +436,15 @@ public class PulleyDrawer: Hashable
 
 extension PulleyDrawer: DrawerDelegate
 {
+    func returnIsDrawerAnimating() -> Bool {
+        return isAnimatingPosition
+    }
+    
+    func returnPresentationHeight() -> CGFloat?
+    {
+        return presentationDrawerHeight
+    }
+    
     func returnCornerRadius() -> CGFloat
     {
         return cornerRadius

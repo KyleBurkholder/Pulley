@@ -13,7 +13,11 @@ protocol DrawerDelegate : AnyObject
     
     func returnDrawerPosition() -> CGFloat
     
+    func returnPresentationHeight() -> CGFloat?
+    
     func returnCornerRadius() -> CGFloat
+    
+    func returnIsDrawerAnimating() -> Bool
 }
 
 class BackgroundMaskedView: UIView
@@ -27,9 +31,13 @@ class BackgroundMaskedView: UIView
     
     var isAnimating: Bool = false
     
-    var bottomDrawerCompletionHander: (() -> Void)?
+    var bottomDrawerCompletionHanders: [String: (() -> Void)] = [:]
     
-    var topDrawerCompletionHander: (() -> Void)?
+    var topDrawerCompletionHanders: [String: (() -> Void)] = [:]
+    
+    var bottomDrawerOverpass: (CGFloat, () -> Void)?
+    
+    var topDrawerOverpass: (CGFloat, () -> Void)?
     
     //TODO: Remove when done debugging
     
@@ -117,6 +125,16 @@ class BackgroundMaskedView: UIView
         return height
     }
     
+    var bottomDrawerPresentationHeight: CGFloat
+    {
+        guard let height = bottomDrawerDelegate?.returnPresentationHeight() else
+        {
+            print("bottomDrawerDelegate is nil")
+            return 0.0
+        }
+        return height
+    }
+    
     var bottomDrawerOverFlow: CGFloat
     {
         guard let overflow = bottomDrawerDelegate?.returnDrawerOverFlowHeight() else
@@ -130,6 +148,15 @@ class BackgroundMaskedView: UIView
     var topDrawerHeight: CGFloat
     {
         guard let height = topDrawerDelegate?.returnDrawerPosition() else
+        {
+            print("topDrawerDelegate is nil")
+            return 0.0
+        }
+        return height
+    }
+    var topDrawerPresentationHeight: CGFloat
+    {
+        guard let height = topDrawerDelegate?.returnPresentationHeight() else
         {
             print("topDrawerDelegate is nil")
             return 0.0
@@ -158,23 +185,29 @@ class BackgroundMaskedView: UIView
     override func layoutSubviews()
     {
         print("BackgroundMaskedView layoutSubviews called")
-        
+
         self.addSubview(fillView)
         self.addSubview(bottomDrawerView)
         let overflowbounds = self.bounds.applying(CGAffineTransform(scaleX: 1.0, y: 3.0)).offsetBy(dx: 0.0, dy: -self.bounds.height)
         let dividedRects = overflowbounds.divided(atDistance: self.bounds.height + bottomDrawerHeight, from: .maxYEdge)
         
+            
         bottomDrawerView.frame = dividedRects.slice
         print("bottomDrawerView.frame: \(bottomDrawerView.frame)")
         
         if let topView = topDrawerView
         {
             self.addSubview(topView)
-            let secondDividedRects = dividedRects.remainder.divided(atDistance: self.bounds.height + topDrawerHeight, from: .minYEdge)
+            let secondDividedRects = overflowbounds.divided(atDistance: self.bounds.height + topDrawerHeight, from: .minYEdge)
+            
+
             topView.frame = secondDividedRects.slice
-            fillView.frame = secondDividedRects.remainder
+            let height = bottomDrawerView.frame.origin.y - (topView.frame.origin.y + topView.frame.height)
+            let fillViewHeight = height > 0 ? height : 0.0
+            fillView.frame = CGRect(x: 0, y: topView.frame.origin.y + topView.frame.height, width: self.bounds.width, height: fillViewHeight)
             print("topDrawerView.frame: \(topView.frame)")
             print("fillView.frame: \(fillView.frame)")
+    
         }
         else
         {
@@ -236,26 +269,41 @@ class BackgroundMaskedView: UIView
         bottomDrawerView.layer.mask = maskLayer
     }
     
-    func animateMask(for drawer: PulleyDrawer, points: CGFloat)
+    func animateMask(for drawer: PulleyDrawer, points: CGFloat, animationID ID: String)
     {
+
+//        removeAnimation(forType: drawer.type)
+        
         numberOfTimesAnimated += 1
         print("Animation number \(numberOfTimesAnimated)")
-        isAnimating = true
         let dimmingDrawerView: UIView
         let drawerMove: CGFloat
-        let uniqueString = NSUUID().uuidString
+        let maxGap: CGFloat
+        var extraFromOtherDrawer: CGFloat = 0.0
         var fillViewCompletion:  (() -> Void)? = nil
-        print(uniqueString.description)
+        print(ID.description)
         print(points)
         
         switch drawer.type
         {
         case .bottom:
+            maxGap = abs(self.bounds.height - bottomDrawerPresentationHeight - topDrawerHeight)
+            if let otherDrawer = topDrawerDelegate, otherDrawer.returnIsDrawerAnimating()
+            {
+            extraFromOtherDrawer = topDrawerOverpass?.0 ?? 0.0
+            }
             
             drawerMove = points
             
             dimmingDrawerView = bottomDrawerView
+
         case .top:
+            maxGap = abs(self.bounds.height - bottomDrawerHeight - topDrawerPresentationHeight)
+            if let otherDrawer = bottomDrawerDelegate, otherDrawer.returnIsDrawerAnimating()
+            {
+                extraFromOtherDrawer = bottomDrawerOverpass?.0 ?? 0.0
+            }
+            
             
             drawerMove = -points
             
@@ -268,14 +316,17 @@ class BackgroundMaskedView: UIView
             
             let fillPositionAnimation = CASpringAnimation(keyPath: "position.y", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
             fillPositionAnimation.isAdditive = true
-            fillPositionAnimation.fromValue = 0.0
-            fillPositionAnimation.toValue = -points
+            fillPositionAnimation.fromValue = points
+            fillPositionAnimation.toValue = 0.0
             fillPositionAnimation.duration = fillPositionAnimation.settlingDuration
             
-            fillPositionAnimation.fillMode = kCAFillModeForwards
-            fillPositionAnimation.isRemovedOnCompletion = false
+//            fillPositionAnimation.fillMode = kCAFillModeForwards
+//            fillPositionAnimation.isRemovedOnCompletion = false
             
-            fillView.layer.add(fillPositionAnimation, forKey: "position of fillView \(uniqueString)")
+//            fillView.layer.position.y = fillView.layer.position.y - points
+            
+            fillView.layer.add(fillPositionAnimation, forKey: "position of fillView \(ID)")
+            
             
             fillViewCompletion =
                 {[weak self, points] in
@@ -284,8 +335,8 @@ class BackgroundMaskedView: UIView
                         print("Can't Complete fillViewPositionCompletion because self is gone")
                         return
                     }
-                safeSelf.fillView.layer.position.y = safeSelf.fillView.layer.position.y + points
-                safeSelf.fillView.layer.removeAnimation(forKey: "position of fillView \(uniqueString)")
+    
+                safeSelf.fillView.layer.removeAnimation(forKey: "position of fillView \(ID)")
             }
             
             dimmingDrawerView = topDrawerView
@@ -293,54 +344,87 @@ class BackgroundMaskedView: UIView
             return
         }
         
+        
         let drawerAnimation = CASpringAnimation(keyPath: "position.y", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
         drawerAnimation.isAdditive = true
-        drawerAnimation.fromValue = 0.0
-        drawerAnimation.toValue = -points
+        drawerAnimation.fromValue = points
+        drawerAnimation.toValue = 0.0
         drawerAnimation.duration = drawerAnimation.settlingDuration
         
-        drawerAnimation.fillMode = kCAFillModeForwards
-        drawerAnimation.isRemovedOnCompletion = false
+//        drawerAnimation.fillMode = kCAFillModeForwards
+//        drawerAnimation.isRemovedOnCompletion = false
         
-        dimmingDrawerView.layer.add(drawerAnimation, forKey: "position of drawer \(uniqueString)")
+//        dimmingDrawerView.layer.position.y = dimmingDrawerView.layer.position.y - points
+        
+        dimmingDrawerView.layer.add(drawerAnimation, forKey: "position of drawer \(ID)")
         
         
+        //TODO: Clean up this name wise
+        
+        print("maxGap: \(maxGap)\ndrawerMove: \(drawerMove)")
+        
+        var adder = maxGap - points > 0 ? 0.0 : drawerMove < 0 ? maxGap - points : points - maxGap
+        
+        adder = extraFromOtherDrawer == 0.0 ? adder : 0.0
+        
+        print("bottomDrawerHeight: \(bottomDrawerHeight)")
+        print("topDrawerHeight: \(topDrawerHeight)")
+        print("adder: \(adder)")
+        print("extralFromOtherDrawer \(extraFromOtherDrawer)")
         let fillBoundsAnimation = CASpringAnimation(keyPath: "bounds.size.height", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
         fillBoundsAnimation.isAdditive = true
-        fillBoundsAnimation.fromValue = 0.0
-        fillBoundsAnimation.toValue = -drawerMove
+        fillBoundsAnimation.fromValue = drawerMove - adder + extraFromOtherDrawer
+        fillBoundsAnimation.toValue =  0.0 - adder + extraFromOtherDrawer
         fillBoundsAnimation.duration = fillBoundsAnimation.settlingDuration
         
-        fillBoundsAnimation.fillMode = kCAFillModeForwards
-        fillBoundsAnimation.isRemovedOnCompletion = false
+        if adder != 0
+        {
+            fillBoundsAnimation.fillMode = kCAFillModeForwards
+            fillBoundsAnimation.isRemovedOnCompletion = false
+        }
         
-        fillView.layer.add(fillBoundsAnimation, forKey: "bounds for fillView \(uniqueString)")
-
+        fillView.layer.add(fillBoundsAnimation, forKey: "bounds for fillView \(ID)")
+    
+        print("fillView before got changed to: \(fillView.frame)")
+//        fillView.layer.bounds.size.height = fillView.layer.bounds.size.height + drawerMove - adder
+        
+        
         let completionHander =
-            { [weak self, points] in
-                
-                print("completionChanges")
+            { [weak self] in
+                print("completionChanges for \(ID)")
                 fillViewCompletion?()
                 guard let safeSelf = self else
                 {
                     print("Can't Complete fillViewPositionCompletion because self is gone")
                     return
                 }
-                print(dimmingDrawerView.layer.position.y)
-                dimmingDrawerView.layer.position.y = dimmingDrawerView.layer.position.y - points
-                dimmingDrawerView.layer.removeAnimation(forKey: "position of drawer \(uniqueString)")
-                print(dimmingDrawerView.layer.position.y)
-                safeSelf.fillView.layer.bounds.size.height = safeSelf.fillView.layer.bounds.size.height + drawerMove
-                safeSelf.fillView.layer.removeAnimation(forKey: "bounds for fillView \(uniqueString)")
+                dimmingDrawerView.layer.removeAnimation(forKey: "position of drawer \(ID)")
+//                if adder == 0
+//                {
+                safeSelf.fillView.layer.removeAnimation(forKey: "bounds for fillView \(ID)")
+//                    switch drawer.type
+//                    {
+//                    case .bottom:
+//                        self?.topDrawerOverpass?.1()
+//                    case .top:
+//                        self?.bottomDrawerOverpass?.1()
+//                    default:
+//                        return
+//                    }
+//                }
         }
-        switch drawer.type {
+        switch drawer.type
+        {
         case .bottom:
-            bottomDrawerCompletionHander = completionHander
+            bottomDrawerOverpass = adder != 0.0 ? (adder, {[weak self] in self?.fillView.layer.removeAnimation(forKey: "bounds for fillView \(ID)")}) : nil
+            bottomDrawerCompletionHanders[ID] = completionHander
         case .top:
-            topDrawerCompletionHander = completionHander
+            topDrawerOverpass = adder != 0.0 ? (adder, {[weak self] in self?.fillView.layer.removeAnimation(forKey: "bounds for fillView \(ID)")}) : nil
+            topDrawerCompletionHanders[ID] = completionHander
         default:
             return
         }
+        self.setNeedsLayout()
     }
     
     func dimProgress() -> CGFloat
@@ -356,6 +440,31 @@ class BackgroundMaskedView: UIView
             return 1.0
         default:
             return (heightStartDim - dimViewHeight) / (heightStartDim - heightMaxDim)
+        }
+    }
+    
+    func removeAnimation(forType type: DrawerType)
+    {
+        switch type {
+        case .bottom:
+            bottomDrawerCompletionHanders.forEach({$1()})
+            bottomDrawerCompletionHanders = [:]
+        case .top:
+            topDrawerCompletionHanders.forEach({$1()})
+            topDrawerCompletionHanders = [:]
+        default:
+            return
+        }
+    }
+    
+    func removeAnimation(forID ID: String)
+    {
+        if let completionBlock = bottomDrawerCompletionHanders.removeValue(forKey: ID)
+        {
+            completionBlock()
+        } else if let comlpetionBlock = topDrawerCompletionHanders.removeValue(forKey: ID)
+        {
+            comlpetionBlock()
         }
     }
 }
