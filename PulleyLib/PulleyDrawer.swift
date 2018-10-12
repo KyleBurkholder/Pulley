@@ -14,7 +14,7 @@ protocol PulleyChestOfDrawers: AnyObject
     
     func producePrimaryView() -> UIView
     
-    func didSetBackgroundVisualEffectView(for drawer: PulleyDrawer)
+    func layoutViewIfViewLoaded()
     
     func getLowestStop(for drawer: PulleyDrawer) -> CGFloat
     
@@ -349,14 +349,14 @@ public class PulleyDrawer: Hashable
     //MARK: Animation constants
     
     /// The animation duration for setting the drawer position
-    public var animationDuration: CGFloat = 1.5
+    public var animationDuration: CGFloat = 0.5
     
     
     /// The animation delay for setting the drawer position
     public var animationDelay: TimeInterval = 0.0
     
     /// The spring damping for setting the drawer position
-    public var animationSpringDamping: CGFloat = 0.75
+    public var animationSpringDamping: CGFloat = 1.25
     
     /// The spring's initial velocity for setting the drawer position
     public var animationSpringInitialVelocity: CGFloat = 0.0
@@ -396,8 +396,7 @@ public class PulleyDrawer: Hashable
                 scrollView.insertSubview(drawerBackgroundVisualEffectView, aboveSubview: shadowView)
                 drawerBackgroundVisualEffectView.clipsToBounds = true
                 drawerBackgroundVisualEffectView.layer.cornerRadius = cornerRadius
-                //TODO: Turn this into just a setNeedsLayout if view is loaded
-                delegate?.didSetBackgroundVisualEffectView(for: self)
+                delegate?.layoutViewIfViewLoaded()
             }
         }
     }
@@ -410,12 +409,16 @@ public class PulleyDrawer: Hashable
         didSet {
             if let drawerBackgroundVisualEffectView = backgroundSnapShotView
             {
-                //TODO: This needs to be completely reworked to go with backgrounSnapShotView
-//                scrollView.insertSubview(drawerBackgroundVisualEffectView, aboveSubview: shadowView)
-//                drawerBackgroundVisualEffectView.clipsToBounds = true
-//                drawerBackgroundVisualEffectView.layer.cornerRadius = cornerRadius
-//                //TODO: Turn this into just a setNeedsLayout if view is loaded
-//                delegate?.didSetBackgroundVisualEffectView(for: self)
+                scrollView.insertSubview(drawerBackgroundVisualEffectView, belowSubview: shadowView)
+
+                let contentView = snapShotContentView ?? UIView()
+                snapShotContentView = contentView
+                contentView.layer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                drawerBackgroundVisualEffectView.addSubview(contentView)
+
+                scrollView.insertSubview(drawerBackgroundVisualEffectView, aboveSubview: shadowView)
+                drawerBackgroundVisualEffectView.clipsToBounds = true
+                delegate?.layoutViewIfViewLoaded()
             } else
             {
                 snapShotContentView = nil
@@ -434,31 +437,4 @@ public class PulleyDrawer: Hashable
     }
 }
 
-extension PulleyDrawer: DrawerDelegate
-{
-    func returnIsDrawerAnimating() -> Bool {
-        return isAnimatingPosition
-    }
-    
-    func returnPresentationHeight() -> CGFloat?
-    {
-        return presentationDrawerHeight
-    }
-    
-    func returnCornerRadius() -> CGFloat
-    {
-        return cornerRadius
-    }
-    
-    func returnDrawerOverFlowHeight() -> CGFloat
-    {
-        return bounceOverflowMargin
-    }
-    
-    func returnDrawerPosition() -> CGFloat
-    {
-        return visibleDrawerHeight
-    }
-    
-    
-}
+

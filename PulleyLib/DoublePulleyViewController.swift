@@ -104,12 +104,6 @@ open class DoublePulleyViewController: PulleyViewController
     
     override open func loadView()
     {
-        //TODO: Remove when done
-//        UIApplication.shared.windows.first?.layer.speed = 0.5
-        
-//        backgroundDimmingView.topDrawerView = backgroundDimmingView.setupView()
-//        backgroundDimmingView.topDrawerDelegate = topDrawer
-        
         super.loadView()
         
         // IB Support
@@ -332,38 +326,23 @@ open class DoublePulleyViewController: PulleyViewController
 
     }
     
-//    @objc override func animationTick(_ displayLink: CADisplayLink)
-//    {
-//
-//
-//
-////        let dimViewHeight = drawer.partialRevealHeight
-////        let fullRevealHeight = drawer.revealHeight
-//        var remainingSpace = view.bounds.height
-//        for drawer in drawers
-//        {
-//            let scrollViewLayerY = drawer.scrollView.layer.presentation()?.bounds.origin.y ?? drawer.scrollView.contentOffset.y
-//            let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollViewLayerY : drawer.contentOffset - scrollViewLayerY
-//            remainingSpace -= drawerContentOffset
-//        }
-//
-//        if drawerContentOffset > dimViewHeight
-//        {
-//            var progress: CGFloat = (drawerContentOffset - dimViewHeight) / (fullRevealHeight - dimViewHeight) //backgroundDimmingView.dimProgress()
-//            progress = progress > 1.0 ? 1.0 : progress
-//            backgroundDimmingView.alpha = progress * backgroundDimmingOpacity
-//            if drawerContentOffset - dimViewHeight > drawer.bounceOverflowMargin
-//            {
-//                //                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
-//                //                updatesnapShotContentFrame(for: drawer)
-//            }
-//        } else
-//        {
-//            backgroundDimmingView.alpha = 0.0
-//            alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
-//        }
-//
-//    }
+    @objc override func animationTick(_ displayLink: CADisplayLink)
+    {
+        for drawer in drawers
+        {
+            if distance(for: drawer) < dimStartDistance
+            {
+                var progress: CGFloat = (dimStartDistance - distance(for: drawer)) / (dimStartDistance - dimEndDistance)
+                progress = progress > 1.0 ? 1.0 : progress
+                backgroundDimmingView.alpha = progress * backgroundDimmingOpacity
+                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
+            } else
+            {
+                backgroundDimmingView.alpha = 0.0
+                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
+            }
+        }
+    }
     
     override func distance(for drawer: PulleyDrawer) -> CGFloat
     {
@@ -527,10 +506,6 @@ open class DoublePulleyViewController: PulleyViewController
         drawer.contentContainer.layer.mask = cardMaskLayer
 
         drawer.shadowView.layer.shadowPath = borderPath
-        
-//        let repLayer = CAReplicatorLayer(layer: primaryContentContainer.layer)
-        
-//        drawer.backgroundMask.layer.addSublayer(repLayer)
         
         drawer.scrollView.transform = CGAffineTransform.identity
         drawer.contentContainer.transform = drawer.scrollView.transform

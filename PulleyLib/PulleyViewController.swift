@@ -107,8 +107,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     
     public var bottomDrawer: PulleyDrawer = PulleyDrawer(originSide: .bottom)
 
-    //public let bottomDrawer.bounceOverflowMargin: CGFloat = 20.0
-
     /// The current content view controller (shown behind the drawer).
     public internal(set) var primaryContentViewController: UIViewController!
     {
@@ -233,7 +231,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         return UIEdgeInsets(top: safeAreaTopInset, left: safeAreaLeftInset, bottom: safeAreaBottomInset, right: safeAreaRightInset)
     }
     
-    public var dimStartDistance: CGFloat = 500.0
+    public var dimStartDistance: CGFloat = 200.0
     {
         didSet
         {
@@ -241,16 +239,13 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         }
     }
     
-    public var dimEndDistance: CGFloat = 300.0
+    public var dimEndDistance: CGFloat = 50.0
     {
         didSet
         {
             //TODO: Code to update progress
         }
     }
-    
-        
-    
     
     /**
      Initialize the drawer controller programmtically.
@@ -312,8 +307,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         backgroundDimmingView.backgroundColor = backgroundDimmingColor
         backgroundDimmingView.isUserInteractionEnabled = false
         backgroundDimmingView.alpha = 0.0
-        //TODO: Remove. This is old backgroundDimmingView
-//        backgroundDimmingView.bottomDrawerDelegate = bottomDrawer
         
         dimmingViewTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(PulleyViewController.dimmingViewTapRecognizerAction(gestureRecognizer:)))
         backgroundDimmingView.addGestureRecognizer(dimmingViewTapRecognizer!)
@@ -324,14 +317,9 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         
         self.view.addSubview(primaryContentContainer)
         self.view.addSubview(backgroundDimmingView)
-        //TODO: Remove
-//        self.view.addSubview(bottomDrawer.backgroundView)
         self.view.addSubview(bottomDrawer.scrollView)
         
         primaryContentContainer.constrainToParent()
-        
-        //TODO: Remove
-//        bottomDrawer.backgroundView.constrainToParent()
     }
     
     override open func viewDidLoad()
@@ -511,11 +499,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         bottomDrawer.contentContainer.transform = bottomDrawer.scrollView.transform
         bottomDrawer.shadowView.transform = bottomDrawer.scrollView.transform
         
-        //TODO: Uncomment if masking func needed. Remove if not
-        backgroundDimmingView.setNeedsLayout()
-        backgroundDimmingView.layoutIfNeeded()
-        //TODO: Remove. This is old backgroundDimmingView
-//        backgroundDimmingView.updateMask(with: bottomDrawer.contentContainer.convert(bottomDrawer.contentContainer.bounds, to: backgroundDimmingView))
         setDrawerPosition(for: bottomDrawer, position: bottomDrawer.drawerPosition, animated: false)
     }
 
@@ -575,95 +558,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             return .closed
         }
     }
-
-    
-    func producePath () -> (CAShapeLayer, UIBezierPath)
-    {
-        var drawerRect = bottomDrawer.scrollView.convert(bottomDrawer.contentContainer.frame, to: self.view)
-        print("produce Path drawerRect = \(drawerRect)")
-        drawerRect.size.height = drawerRect.size.height
-        print("produce Path drawerRect = \(drawerRect)")
-//        print("backgroundDimmingView.bound = \(backgroundDimmingView.bounds)")
-        let path = UIBezierPath(roundedRect: drawerRect,
-                                byRoundingCorners: [.topLeft, .topRight],
-                                cornerRadii: CGSize(width: bottomDrawer.cornerRadius, height: bottomDrawer.cornerRadius))
-        let maskLayer = CAShapeLayer()
-        
-        // Invert mask to cut away the bottom part of the dimming view
-        path.append(UIBezierPath(rect: backgroundDimmingView.bounds))
-        maskLayer.fillRule = kCAFillRuleEvenOdd
-        
-        maskLayer.path = path.cgPath
-        return (maskLayer, path)
-        
-    }
-    /**
-     Mask backgroundDimmingView layer to avoid drawer background beeing darkened.
-     */
-    func newMaskBackgroundDimmingView(animated: Bool)
-    {
-        print("newMaskBackgroundDimmingView called. animated:\(animated)")
-//        let cutoutHeight = 2 * bottomDrawer.cornerRadius
-//        let maskHeight = bottomDrawer.scrollView.contentSize.height
-//        let maskWidth = backgroundDimmingView.bounds.width - pulleySafeAreaInsets.left - pulleySafeAreaInsets.right
-        var drawerRect = bottomDrawer.contentContainer.convert(bottomDrawer.contentContainer.bounds, to: self.view)
-        drawerRect.size.height = drawerRect.size.height + self.view.bounds.height
-        print("drawerRect = \(drawerRect)")
-        let path = UIBezierPath(roundedRect: drawerRect,
-                                byRoundingCorners: [.topLeft, .topRight],
-                                cornerRadii: CGSize(width: bottomDrawer.cornerRadius, height: bottomDrawer.cornerRadius))
-        let maskLayer = CAShapeLayer()
-        
-        // Invert mask to cut away the bottom part of the dimming view
-        path.append(UIBezierPath(rect: backgroundDimmingView.bounds))
-        maskLayer.fillRule = kCAFillRuleEvenOdd
-        
-        maskLayer.path = path.cgPath
-        if animated
-        {
-//            let pathAnimation = CASpringAnimation(keyPath: "path", dampingRatio: bottomDrawer.animationSpringDamping, frequencyResponse: bottomDrawer.animationDuration)
-//            pathAnimation.fromValue = (backgroundDimmingView.layer.mask as? CAShapeLayer)!.path
-//            pathAnimation.toValue = path.cgPath
-//            print("PathAnimation\ndamping = \(pathAnimation.damping)\ninitialVelocity = \(pathAnimation.initialVelocity)\nmass = \(pathAnimation.mass)\nsettlingDuration = \(pathAnimation.settlingDuration)\nstiffness = \(pathAnimation.stiffness)")
-//
-////            pathAnimation.fillMode = kCAFillModeForwards
-////            pathAnimation.isRemovedOnCompletion = false
-//            backgroundDimmingView.layer.mask = maskLayer
-//            backgroundDimmingView.layer.mask!.add(pathAnimation, forKey: nil)
-//            print("pathAnimation started")
-        }else
-        {
-//            backgroundDimmingViewMasked.frame = bottomDrawer.scrollView.convert(bottomDrawer.contentContainer.frame, to: backgroundDimmingView)
-//            var nonMaskedFrame = backgroundDimmingView.frame
-//            nonMaskedFrame.size.height = backgroundDimmingView.frame.height - backgroundDimmingViewMasked.frame.height
-//            backgroundDimmingViewNonMasked.frame = nonMaskedFrame
-//        backgroundDimmingViewMasked.layer.mask = maskLayer
-        backgroundDimmingView.layer.mask = maskLayer
-        }
-    }
-    
-    @available(*, deprecated)
-    func maskBackgroundDimmingView()
-    {
-        let cutoutHeight = 2 * bottomDrawer.cornerRadius
-        let maskHeight = backgroundDimmingView.bounds.size.height - cutoutHeight - bottomDrawer.scrollView.contentSize.height
-        let maskWidth = backgroundDimmingView.bounds.width - pulleySafeAreaInsets.left - pulleySafeAreaInsets.right
-        let drawerRect = CGRect(x: pulleySafeAreaInsets.left, y: maskHeight, width: maskWidth, height: bottomDrawer.contentContainer.bounds.height)
-        let path = UIBezierPath(roundedRect: drawerRect,
-                                byRoundingCorners: [.topLeft, .topRight],
-                                cornerRadii: CGSize(width: bottomDrawer.cornerRadius, height: bottomDrawer.cornerRadius))
-        let maskLayer = CAShapeLayer()
-        
-        // Invert mask to cut away the bottom part of the dimming view
-        path.append(UIBezierPath(rect: backgroundDimmingView.bounds))
-        maskLayer.fillRule = kCAFillRuleEvenOdd
-        
-        maskLayer.path = path.cgPath
-//        backgroundDimmingView.layer.mask = maskLayer
-    }
-    
-    
-    
+ 
     open func prepareFeedbackGenerator()
     {
         if #available(iOS 10.0, *)
@@ -708,21 +603,21 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     /// - Parameters:
     ///   - bounceHeight: The height to bounce
     ///   - speedMultiplier: The multiplier to apply to the default speed of the animation. Note, default speed is 0.75.
-    public func bounceDrawer(bounceHeight: CGFloat = 50.0, speedMultiplier: Double = 0.75)
+    public func bounceDrawer(for drawer: PulleyDrawer, bounceHeight: CGFloat = 50.0, speedMultiplier: Double = 0.75)
     {
-        guard bottomDrawer.drawerPosition == .collapsed || bottomDrawer.drawerPosition == .partiallyRevealed else
+        guard drawer.drawerPosition == .collapsed || drawer.drawerPosition == .partiallyRevealed else
         {
             print("Pulley: Error: You can only bounce the drawer when it's in the collapsed or partially revealed position.")
             return
         }
         
-        guard bottomDrawer.currentDisplayMode == .drawer else
+        guard drawer.currentDisplayMode == .drawer else
         {
             print("Pulley: Error: You can only bounce the drawer when it's in the .bottomDrawer display mode.")
             return
         }
         
-        let drawerStartingBounds = bottomDrawer.scrollView.bounds
+        let drawerStartingBounds = drawer.scrollView.bounds
         
         // Adapted from https://www.cocoanetics.com/2012/06/lets-bounce/
         let factors: [CGFloat] = [0, 32, 60, 83, 100, 114, 124, 128, 128, 124, 114, 100, 83, 60, 32,
@@ -744,26 +639,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         animation.isRemovedOnCompletion = true
         animation.autoreverses = false
         
-        bottomDrawer.scrollView.layer.add(animation, forKey: "bounceAnimation")
+        drawer.scrollView.layer.add(animation, forKey: "bounceAnimation")
     }
     
-    /**
-     Get a frame for moving backgroundDimmingView according to drawer position.
-     
-     - parameter drawerPosition: drawer position in points
-     
-     - returns: a frame for moving backgroundDimmingView according to drawer position
-     */
-    func backgroundDimmingViewFrameForDrawerPosition(_ drawerPosition: CGFloat) -> CGRect
-    {
-        let cutoutHeight = (2 * bottomDrawer.cornerRadius)
-        var backgroundDimmingViewFrame = backgroundDimmingView.frame
-//        backgroundDimmingViewFrame.origin.y = 0 - drawerPosition + cutoutHeight
-        backgroundDimmingViewFrame.origin.y = bottomDrawer.contentContainer.convert(bottomDrawer.contentContainer.bounds.origin, to: self.view).y
-        
-        return backgroundDimmingViewFrame
-    }
-    
+    //MARK: this currently doesn't work with double
     func syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode()
     {
         guard bottomDrawer.currentDisplayMode == .leftSide else
@@ -870,7 +749,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
         let direction: CGFloat = drawer.type == .bottom ? 1.0 : -1.0
         let contentOffset = direction * (stopToMoveTo - lowestStop - drawer.contentOffset)
-        let contentOffsetForSnap = direction * (stopToMoveTo - drawer.contentOffset)
         triggerFeedbackGenerator()
         
         if animated && self.view.window != nil
@@ -885,8 +763,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             CATransaction.setCompletionBlock({[weak self] in
                 print("animation complete")
                 drawer.isAnimatingPosition = false
-                self?.alphaDimmingCheck(for: drawer, with: self?.backgroundDimmingView.alpha ?? 0.0)
-                
                 self?.syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode()
                 self?.invalidateDisplayLink(for: displayLink)
                 completion?(true)
@@ -903,7 +779,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             drawer.scrollView.layer.add(mainAnimation, forKey: "bounds shift for drawer \(animatorID)")
 
-            if backgroundDimmingView.alpha > 0, let snapContentView = drawer.snapShotContentView
+            if let snapContentView = drawer.snapShotContentView
             {
                 let snapShotAnimation = CASpringAnimation(keyPath: "position.y", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
                 snapShotAnimation.fromValue = snapContentView.frame.origin.y
@@ -939,31 +815,18 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     @objc func animationTick(_ displayLink: CADisplayLink)
     {
         let drawer = bottomDrawer
-        let scrollViewLayerY = drawer.scrollView.layer.presentation()?.bounds.origin.y ?? drawer.scrollView.contentOffset.y
-        let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollViewLayerY : drawer.contentOffset - scrollViewLayerY
         if distance(for: drawer) < dimStartDistance
         {
         var progress: CGFloat = (dimStartDistance - distance(for: drawer)) / (dimStartDistance - dimEndDistance) //backgroundDimmingView.dimProgress()
         progress = progress > 1.0 ? 1.0 : progress
             backgroundDimmingView.alpha = progress * backgroundDimmingOpacity
+            alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
         } else
         {
             backgroundDimmingView.alpha = 0.0
             alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
         }
         
-    }
-    
-    /**
-     Set the drawer position, by default the change will be animated. Deprecated. Recommend switching to the other setDrawerPosition method, this one will be removed in a future release.
-     
-     - parameter position: The position to set the drawer to.
-     - parameter isAnimated: Whether or not to animate the change. Default: true
-     */
-    @available(*, deprecated)
-    public func setDrawerPosition(position: PulleyPosition, isAnimated: Bool = true)
-    {
-        setDrawerPosition(for: bottomDrawer, position: position, animated: isAnimated)
     }
     
     /**
@@ -998,23 +861,13 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
     
     /**
-     Change the current primary content view controller (The one behind the drawer). This method exists for backwards compatibility.
-     
-     - parameter controller: The controller to replace it with
-     - parameter animated:   Whether or not to animate the change. Defaults to true.
-     */
-    public func setPrimaryContentViewController(controller: UIViewController, animated: Bool = true)
-    {
-        setPrimaryContentViewController(controller: controller, animated: animated, completion: nil)
-    }
-    
-    /**
      Change the current drawer content view controller (The one inside the drawer)
      
      - parameter controller: The controller to replace it with
      - parameter animated:   Whether or not to animate the change.
      - parameter completion: A block object to be executed when the animation sequence ends. The Bool indicates whether or not the animations actually finished before the completion handler was called.
      */
+    //TODO: Update setcontent
     public func setDrawerContentViewController(controller: UIViewController, animated: Bool = true, completion: PulleyAnimationCompletionBlock?)
     {
         // Account for transition issue in iOS 11
@@ -1039,17 +892,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             completion?(true)
         }
-    }
-    
-    /**
-     Change the current drawer content view controller (The one inside the drawer). This method exists for backwards compatibility.
-     
-     - parameter controller: The controller to replace it with
-     - parameter animated:   Whether or not to animate the change.
-     */
-    public func setDrawerContentViewController(controller: UIViewController, animated: Bool = true)
-    {
-        setDrawerContentViewController(controller: controller, animated: animated, completion: nil)
     }
     
     /**
@@ -1081,7 +923,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
     
     // MARK: Propogate child view controller style / status bar presentation based on drawer state
-    
+    //TODO: Update next 3 functions
     override open var childViewControllerForStatusBarStyle: UIViewController? {
         get {
             
@@ -1123,7 +965,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     }
     
     // MARK: PulleyDrawerViewControllerDelegate implementation for nested Pulley view controllers in drawers. Implemented here, rather than an extension because overriding extensions in subclasses isn't good practice. Some developers want to subclass Pulley and customize these behaviors, so we'll move them here.
-    
+    //TODO: I might get rid of nested functionality
     open func collapsedDrawerHeight(originSafeArea: CGFloat) -> CGFloat {
         if let drawerVCCompliant = drawerContentViewController as? PulleyDrawerViewControllerDelegate,
             let collapsedHeight = drawerVCCompliant.collapsedDrawerHeight?(originSafeArea: originSafeArea) {
@@ -1245,7 +1087,7 @@ extension PulleyViewController: PulleyChestOfDrawers
             return 0
         }
     }
-    
+    //TODO:  Check didSetSupportPositions and if it works
     func didSetSupportedPositions(for drawer: PulleyDrawer) {
         guard self.isViewLoaded else {
             return
@@ -1274,12 +1116,9 @@ extension PulleyViewController: PulleyChestOfDrawers
         bottomDrawer.enforceCanScrollDrawer()
     }
     
-   func didSetBackgroundVisualEffectView(for drawer: PulleyDrawer) {
-        if let drawerBackgroundVisualEffectView = drawer.backgroundVisualEffectView, self.isViewLoaded
+   func layoutViewIfViewLoaded() {
+        if self.isViewLoaded
         {
-//            drawer.scrollView.insertSubview(drawerBackgroundVisualEffectView, aboveSubview: drawer.shadowView)
-//            drawerBackgroundVisualEffectView.clipsToBounds = true
-//            drawerBackgroundVisualEffectView.layer.cornerRadius = drawer.cornerRadius
             self.view.setNeedsLayout()
         }
     }
@@ -1317,7 +1156,7 @@ extension PulleyViewController: PulleyPassthroughScrollViewDelegate {
         {
             if drawer.contentContainer.bounds.contains(drawer.contentContainer.convert(point, from: scrollView))
             {
-                //I haven't tested if this works or not.
+                //TODO: I haven't tested if this works or not.
                 return drawer.contentContainer.subviews.first ?? drawerContentViewController.view
             }
             
@@ -1433,9 +1272,6 @@ extension PulleyViewController: UIScrollViewDelegate {
         drawer.scrollView.layer.removeAllAnimations()
         drawer.snapShotContentView?.layer.removeAllAnimations()
         
-        
-        //TODO: This might not work with two drawers
-        
         let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
        
         let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollView.contentOffset.y : drawer.contentOffset - scrollViewLayerY
@@ -1447,7 +1283,6 @@ extension PulleyViewController: UIScrollViewDelegate {
             
             var progress: CGFloat = (dimStartDistance - distance(for: drawer)) / (dimStartDistance - dimEndDistance) //backgroundDimmingView.dimProgress()
             progress = progress > 1.0 ? 1.0 : progress
-//            print(progress)
             
             delegate?.makeUIAdjustmentsForFullscreen?(progress: progress, originSafeArea: originSafeArea)
             drawer.drawerDelegate?.makeUIAdjustmentsForFullscreen?(progress: progress, originSafeArea: originSafeArea)
