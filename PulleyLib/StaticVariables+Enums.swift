@@ -17,12 +17,14 @@
  */
 @objc public class PulleyPosition: NSObject {
     
-    public static let collapsed = PulleyPosition(rawValue: 0)
-    public static let standard = PulleyPosition(rawValue: 1)
-    public static let partiallyRevealed = PulleyPosition(rawValue: 2)
-    public static let revealed = PulleyPosition(rawValue: 3)
-    public static let open = PulleyPosition(rawValue: 4)
-    public static let closed = PulleyPosition(rawValue: 5)
+    public static let closed = PulleyPosition(rawValue: 1)
+    public static let collapsed = PulleyPosition(rawValue: 2)
+    public static let standard = PulleyPosition(rawValue: 3)
+    public static let partiallyRevealed = PulleyPosition(rawValue: 4)
+    public static let revealed = PulleyPosition(rawValue: 5)
+    public static let open = PulleyPosition(rawValue: 6)
+    
+    
     
     public static let all: [PulleyPosition] = [
         .collapsed,
@@ -54,7 +56,7 @@
         case "standard":
             return .standard
             
-        case "partiallyrevealed":
+        case "partiallyRevealed":
             return .partiallyRevealed
             
         case "revealed":

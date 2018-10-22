@@ -16,7 +16,7 @@ protocol PulleyChestOfDrawers: AnyObject
     
     func layoutViewIfViewLoaded()
     
-    func getLowestStop(for drawer: PulleyDrawer) -> CGFloat
+    func getLowestStop(for drawer: PulleyDrawer, activeList: Bool) -> CGFloat
     
     func getOriginSafeArea(for drawer: PulleyDrawer) -> CGFloat
     
@@ -67,16 +67,6 @@ public class PulleyDrawer: Hashable
         
         scrollView.delaysContentTouches = delaysContentTouches
         scrollView.canCancelContentTouches = canCancelContentTouches
-        
-        //TODO: Remove the coloring of the the scrollView when I get everything working
-//        switch self.type {
-//        case .bottom:
-//                    scrollView.backgroundColor = UIColor.red
-//        case .top:
-//                    scrollView.backgroundColor = UIColor.purple
-//        default:
-//            return
-//        }
 
         scrollView.decelerationRate = UIScrollViewDecelerationRateFast
         scrollView.scrollsToTop = false
@@ -84,6 +74,11 @@ public class PulleyDrawer: Hashable
         shadowView.layer.shadowOpacity = shadowOpacity
         shadowView.layer.shadowRadius = shadowRadius
         shadowView.backgroundColor = UIColor.clear
+        if type == .top
+        {
+            shadowView.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
+        }
+        print(shadowView.layer.shadowOffset)
         
         contentContainer.backgroundColor = UIColor.clear
         
@@ -157,7 +152,7 @@ public class PulleyDrawer: Hashable
     /// The starting position for the drawer when it first loads
     public var initialDrawerPosition: PulleyPosition = .collapsed
     
-    var collapsedHeight: CGFloat {
+    public var collapsedHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
             return drawerDelegate?.collapsedDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultCollapsedHeight
@@ -165,7 +160,7 @@ public class PulleyDrawer: Hashable
         return kPulleyDefaultCollapsedHeight
     }
     
-    var standardHeight: CGFloat {
+    public var standardHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
             return drawerDelegate?.standardDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultStandardHeight
@@ -173,7 +168,7 @@ public class PulleyDrawer: Hashable
         return kPulleyDefaultStandardHeight
     }
     
-    var partialRevealHeight: CGFloat {
+    public var partialRevealHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
             return drawerDelegate?.partialRevealDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultPartialRevealHeight
@@ -181,7 +176,7 @@ public class PulleyDrawer: Hashable
         return kPulleyDefaultPartialRevealHeight
     }
     
-    var revealHeight: CGFloat {
+    public var revealHeight: CGFloat {
         if let originSafeArea = delegate?.getOriginSafeArea(for: self)
         {
             return drawerDelegate?.revealDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaultRevealHeight
@@ -225,6 +220,12 @@ public class PulleyDrawer: Hashable
         didSet {
             delegate?.didSetSupportedPositions(for: self)
         }
+    }
+    
+    /// The drawer positions supported by the drawer
+    var activePositions: [PulleyPosition]
+    {
+        return drawerDelegate?.activeDrawerPositions?() ?? supportedPositions
     }
     
     //MARK: Margin properties
@@ -349,7 +350,7 @@ public class PulleyDrawer: Hashable
     //MARK: Animation constants
     
     /// The animation duration for setting the drawer position
-    public var animationDuration: CGFloat = 0.5
+    public var animationDuration: CGFloat = 0.4
     
     
     /// The animation delay for setting the drawer position
@@ -376,7 +377,7 @@ public class PulleyDrawer: Hashable
     /// Get the current drawer distance. This value is equivalent in nature to the one delivered by PulleyDelegate's `drawerChangedDistanceFromBottom` callback.
     public var distanceFromOrigin: (distance: CGFloat, originSafeArea: CGFloat) {
         
-        if let lowestStop = delegate?.getLowestStop(for: self), let originSafeArea = delegate?.getOriginSafeArea(for: self), let loaded = delegate?.isPulleyViewLoaded(), loaded
+        if let lowestStop = delegate?.getLowestStop(for: self, activeList: false), let originSafeArea = delegate?.getOriginSafeArea(for: self), let loaded = delegate?.isPulleyViewLoaded(), loaded
         {
             
             return (distance: scrollView.contentOffset.y + lowestStop, originSafeArea: originSafeArea)

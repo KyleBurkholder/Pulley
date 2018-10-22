@@ -206,11 +206,6 @@ open class DoublePulleyViewController: PulleyViewController
 
         backgroundDimmingView.isHidden = false
 
-        backgroundDimmingView.setNeedsLayout()
-        backgroundDimmingView.layoutIfNeeded()
-        //TODO" Remove. BackgroundDimmingView remains
-//        backgroundDimmingView.updateMask(with: bottomDrawer.contentContainer.convert(bottomDrawer.contentContainer.bounds, to: backgroundDimmingView))
-//        backgroundDimmingView.updateTopMask(with: topDrawer.contentContainer.convert(topDrawer.contentContainer.bounds, to: backgroundDimmingView))
         inViewDidLayoutSubview = false
     }
     
@@ -222,7 +217,8 @@ open class DoublePulleyViewController: PulleyViewController
     {
         for child in self.childViewControllers
         {
-            if let drawerVCCompliant = child as? PulleyDrawerViewControllerDelegate{
+            if let drawerVCCompliant = child as? PulleyDrawerViewControllerDelegate
+            {
                 switch child
                 {
                 case drawerContentViewController:
@@ -250,6 +246,7 @@ open class DoublePulleyViewController: PulleyViewController
     
     override public func setDrawerPosition(for loadDrawer: PulleyDrawer?, position: PulleyPosition, animated: Bool, completion: PulleyAnimationCompletionBlock? = nil)
     {
+        print("setDrawerPosition, drawer raw \(loadDrawer?.type.rawValue), position Raw:\(position.rawValue), animated: \(animated)")
         var passCompletion = completion
         if animated
         {
@@ -376,7 +373,7 @@ open class DoublePulleyViewController: PulleyViewController
             let checkDrawerContentOffset: CGFloat = checkDrawer.type == DrawerType.bottom ? checkScrollViewLayerY : checkDrawer.contentOffset - checkScrollViewLayerY
             
             var previousStopValue = stopValue(for: checkDrawer.drawerPosition, from: checkDrawer)
-            var lowerStopList = getStopList(for: checkDrawer).filter({$0 < previousStopValue})
+            var lowerStopList = getStopList(for: checkDrawer, activeList: true).filter({$0 < previousStopValue})
             var currentStopValue = previousStopValue
             
             guard checkDrawerContentOffset > remainingSpace + (drawer.bounceOverflowMargin - 5.0) else
@@ -428,13 +425,13 @@ open class DoublePulleyViewController: PulleyViewController
             }
         }
 
-        let mostCollapsedHeight = getStopList(for: drawer).min() ?? 0
+        let mostCollapsedHeight = getStopList(for: drawer, activeList: false).min() ?? 0
         
         let adjustedLeftSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.left : 0.0
         let adjustedRightSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.right : 0.0
         
         // Layout scrollview
-        let drawerheight: CGFloat = getStopList(for: drawer).max() ?? 0.0
+        let drawerheight: CGFloat = getStopList(for: drawer, activeList: false).max() ?? 0.0
         let yOrigin: CGFloat
         switch drawer.type
         {
@@ -513,4 +510,14 @@ open class DoublePulleyViewController: PulleyViewController
 
         setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
     }
+    
+    //MARK: Public Functions
+    
+//    public func setNeedsActiveDrawerPositionsUpdate()
+//    {
+//        
+//        bottomDrawer
+//    }
+    
 }
+

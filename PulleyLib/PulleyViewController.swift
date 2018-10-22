@@ -65,6 +65,11 @@ import UIKit
      *  Return the support drawer positions for your drawer.
      */
     @objc optional func supportedDrawerPositions() -> [PulleyPosition]
+    
+    /**
+     *  Return the active drawer positions for your drawer.
+     */
+    @objc optional func activeDrawerPositions() -> [PulleyPosition]
 }
 
 /**
@@ -414,13 +419,13 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
                 self.bottomDrawer.scrollView.scrollIndicatorInsets =  UIEdgeInsets(top: 0, left: 0, bottom: self.bottomLayoutGuide.length, right: 0) // (usefull if visible..)
             }
 
-            let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
+            let lowestStop = getStopList(for: bottomDrawer, activeList: false).min() ?? 0
             
             let adjustedLeftSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.left : 0.0
             let adjustedRightSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.right : 0.0
             
                 // Layout scrollview
-            let adjustedTopInset: CGFloat = getStopList(for: bottomDrawer).max() ?? 0.0
+            let adjustedTopInset: CGFloat = getStopList(for: bottomDrawer, activeList: false).max() ?? 0.0
             bottomDrawer.scrollView.frame = CGRect(x: adjustedLeftSafeArea, y: self.view.bounds.height - adjustedTopInset, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: adjustedTopInset)
             
             bottomDrawer.scrollView.addSubview(bottomDrawer.shadowView)
@@ -473,7 +478,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             //let lowestStop = [(self.view.bounds.size.height - topInset - pulleySafeAreaInsets.top), collapsedHeight, revealHeight, partialRevealHeight].min() ?? 0
             //Why not try this?
-            let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
+            let lowestStop = getStopList(for: bottomDrawer, activeList: false).min() ?? 0
             
             if bottomDrawer.supportedPositions.contains(.open)
             {
@@ -504,9 +509,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
 
     // MARK: Internal State Updates
 
-    func getStopList(for drawer: PulleyDrawer) -> [CGFloat]
+    func getStopList(for drawer: PulleyDrawer, activeList: Bool) -> [CGFloat]
     {
-        let drawerStops = drawer.supportedPositions.map({stopValue(for: $0, from: drawer)})
+        let positions = activeList ? drawer.activePositions : drawer.supportedPositions
+        let drawerStops = positions.map({stopValue(for: $0, from: drawer)})
         return drawerStops
     }
     
@@ -531,6 +537,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
         case .closed:
             return 0
+            
         default:
             return 0
         }
@@ -650,7 +657,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             return
         }
         
-        let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
+        let lowestStop = getStopList(for: bottomDrawer, activeList: false).min() ?? 0
         
         bottomDrawer.contentContainer.frame = CGRect(x: 0.0, y: bottomDrawer.scrollView.bounds.height - lowestStop , width: bottomDrawer.scrollView.bounds.width, height: bottomDrawer.scrollView.contentOffset.y + lowestStop + bottomDrawer.bounceOverflowMargin)
         bottomDrawer.backgroundVisualEffectView?.frame = bottomDrawer.contentContainer.frame
@@ -724,9 +731,9 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     public func setDrawerPosition(for loadDrawer: PulleyDrawer? = nil, position: PulleyPosition, animated: Bool, completion: PulleyAnimationCompletionBlock? = nil)
     {
         let drawer: PulleyDrawer = loadDrawer ?? bottomDrawer
-        guard drawer.supportedPositions.contains(position) else
+        guard drawer.activePositions.contains(position) else
         {
-            print("PulleyViewController: You can't set the drawer position to something not supported by the current view controller contained in the drawer. If you haven't already, you may need to implement the PulleyDrawerViewControllerDelegate.")
+            print("PulleyViewController: You can't set the drawer position to something not supported by the current view controller contained in the drawer. If you haven't already, you may need to implement the PulleyDrawerViewControllerDelegate. Position: \(position.rawValue)")
             return
         }
         let scrollViewLayerY = drawer.scrollView.layer.presentation()?.bounds.origin.y ?? drawer.scrollView.contentOffset.y
@@ -746,7 +753,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         drawer.drawerPosition = position
         
         let stopToMoveTo: CGFloat = stopValue(for: drawer.drawerPosition, from: drawer)
-        let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
+        let lowestStop = getStopList(for: bottomDrawer, activeList: false).min() ?? 0
         let direction: CGFloat = drawer.type == .bottom ? 1.0 : -1.0
         let contentOffset = direction * (stopToMoveTo - lowestStop - drawer.contentOffset)
         triggerFeedbackGenerator()
@@ -1072,8 +1079,8 @@ extension PulleyViewController: PulleyChestOfDrawers
         return self.isViewLoaded
     }
     
-    func getLowestStop(for drawer: PulleyDrawer) -> CGFloat {
-        return getStopList(for: bottomDrawer).min() ?? 0
+    func getLowestStop(for drawer: PulleyDrawer, activeList: Bool) -> CGFloat {
+        return getStopList(for: bottomDrawer, activeList: activeList).min() ?? 0
     }
 
     
@@ -1110,10 +1117,10 @@ extension PulleyViewController: PulleyChestOfDrawers
                 return pos1.rawValue < pos2.rawValue
                 } ?? .collapsed
             
-            setDrawerPosition(for: bottomDrawer, position: lowestDrawerState, animated: false)
+            setDrawerPosition(for: drawer, position: lowestDrawerState, animated: false)
         }
         
-        bottomDrawer.enforceCanScrollDrawer()
+        drawer.enforceCanScrollDrawer()
     }
     
    func layoutViewIfViewLoaded() {
@@ -1171,14 +1178,11 @@ extension PulleyViewController: UIScrollViewDelegate {
         print("scrollViewDidEndDragging")
         let drawer: PulleyDrawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
         
-        let drawerStops: [CGFloat] = drawer.supportedPositions.filter({$0 != .closed}).map({stopValue(for: $0, from: drawer)})
+        let drawerStops: [CGFloat] = drawer.activePositions.map({stopValue(for: $0, from: drawer)})
         let currentDrawerPositionStop: CGFloat = stopValue(for: drawer.drawerPosition, from: drawer)
         
         let lowestStop = drawerStops.min() ?? 0
         
-//        print(lastDragTargetContentOffset.y)
-//        print(drawer.contentOffset)
-//        print(lowestStop)
         let distanceFromOriginOfView = abs(lastDragTargetContentOffset.y - drawer.contentOffset)
         
         var currentClosestStop = lowestStop
@@ -1211,7 +1215,7 @@ extension PulleyViewController: UIScrollViewDelegate {
             {
                 if distance < 0
                 {
-                    let orderedSupportedDrawerPositions = drawer.supportedPositions.sorted(by: { $0.rawValue < $1.rawValue }).filter({ $0 != .closed })
+                    let orderedSupportedDrawerPositions = drawer.activePositions.sorted(by: { $0.rawValue < $1.rawValue }).filter({ $0 != .closed })
                     
                     for position in orderedSupportedDrawerPositions
                     {
@@ -1224,7 +1228,7 @@ extension PulleyViewController: UIScrollViewDelegate {
                 }
                 else
                 {
-                    let orderedSupportedDrawerPositions = drawer.supportedPositions.sorted(by: { $0.rawValue > $1.rawValue }).filter({ $0 != .closed })
+                    let orderedSupportedDrawerPositions = drawer.activePositions.sorted(by: { $0.rawValue > $1.rawValue }).filter({ $0 != .closed })
                     for position in orderedSupportedDrawerPositions
                     {
                         if position.rawValue < drawer.drawerPosition.rawValue
@@ -1266,15 +1270,25 @@ extension PulleyViewController: UIScrollViewDelegate {
             snapContentView.frame.origin.y = snapOriginY
         }
         
-        
-        
         drawer.isAnimatingPosition = false
         drawer.scrollView.layer.removeAllAnimations()
         drawer.snapShotContentView?.layer.removeAllAnimations()
         
-        let lowestStop = getStopList(for: bottomDrawer).min() ?? 0
+        let lowestStop = getStopList(for: drawer, activeList: true).min() ?? 0
+        
+        let highestStop = getStopList(for: drawer, activeList: true).max() ?? 0
+        
+
        
         let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollView.contentOffset.y : drawer.contentOffset - scrollViewLayerY
+        
+        if drawerContentOffset > highestStop
+        {
+            scrollView.contentOffset.y = drawer.type == DrawerType.bottom ? highestStop : drawer.contentOffset - highestStop
+        } else if drawerContentOffset < lowestStop
+        {
+            scrollView.contentOffset.y = drawer.type == DrawerType.bottom ? lowestStop : drawer.contentOffset - lowestStop
+        }
         
         print(drawer.type == DrawerType.bottom ? (view.bounds.height - drawerContentOffset) : drawerContentOffset )
         
