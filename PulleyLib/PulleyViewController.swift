@@ -804,8 +804,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         {
             drawer.scrollView.setContentOffset(CGPoint(x: 0, y: contentOffset), animated: false)
             
-            backgroundDimmingView.setNeedsLayout()
-            
             delegate?.drawerPositionDidChange?(drawer: self, originSafeArea: pulleySafeAreaInsets.bottom)
             drawer.drawerDelegate?.drawerPositionDidChange?(drawer: self, originSafeArea: pulleySafeAreaInsets.bottom)
             (primaryContentViewController as? PulleyPrimaryContentControllerDelegate)?.drawerPositionDidChange?(drawer: self, originSafeArea: pulleySafeAreaInsets.bottom)
@@ -1249,7 +1247,7 @@ extension PulleyViewController: UIScrollViewDelegate {
         guard (scrollView as? PulleyPassthroughScrollView)?.parentDrawer != nil else { return }
         
             lastDragTargetContentOffset = targetContentOffset.pointee
-            print(lastDragTargetContentOffset)
+//            print(lastDragTargetContentOffset)
             // Halt intertia
             targetContentOffset.pointee = scrollView.contentOffset
 
@@ -1261,26 +1259,31 @@ extension PulleyViewController: UIScrollViewDelegate {
         let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
         let originSafeArea = getOriginSafeArea(for: drawer)
         
-        let scrollViewLayerY = drawer.isAnimatingPosition ? (scrollView.layer.presentation()?.bounds.origin.y ?? scrollView.contentOffset.y) : scrollView.contentOffset.y
-        scrollView.contentOffset.y = scrollViewLayerY
+        print("originaSafeArea = \(originSafeArea)")
         
-        if let snapContentView = drawer.snapShotContentView
+        let scrollViewLayerY = (scrollView.layer.presentation()?.bounds.origin.y ?? scrollView.contentOffset.y)
+        if drawer.isAnimatingPosition
         {
-            let snapOriginY = snapContentView.layer.presentation()?.frame.origin.y ?? snapContentView.frame.origin.y
-            snapContentView.frame.origin.y = snapOriginY
+            scrollView.contentOffset.y = scrollViewLayerY
+            if let snapContentView = drawer.snapShotContentView
+            {
+                let snapOriginY = snapContentView.layer.presentation()?.frame.origin.y ?? snapContentView.frame.origin.y
+                snapContentView.frame.origin.y = snapOriginY
+            }
+            drawer.isAnimatingPosition = false
+            drawer.scrollView.layer.removeAllAnimations()
+            drawer.snapShotContentView?.layer.removeAllAnimations()
         }
         
-        drawer.isAnimatingPosition = false
-        drawer.scrollView.layer.removeAllAnimations()
-        drawer.snapShotContentView?.layer.removeAllAnimations()
+
         
         let lowestStop = getStopList(for: drawer, activeList: true).min() ?? 0
         
         let highestStop = getStopList(for: drawer, activeList: true).max() ?? 0
         
-
-       
-        let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollView.contentOffset.y : drawer.contentOffset - scrollViewLayerY
+        print("highestStop = \(highestStop)")
+    
+        let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollView.contentOffset.y : drawer.contentOffset - scrollView.contentOffset.y
         
         if drawerContentOffset > highestStop
         {
@@ -1290,7 +1293,7 @@ extension PulleyViewController: UIScrollViewDelegate {
             scrollView.contentOffset.y = drawer.type == DrawerType.bottom ? lowestStop : drawer.contentOffset - lowestStop
         }
         
-        print(drawer.type == DrawerType.bottom ? (view.bounds.height - drawerContentOffset) : drawerContentOffset )
+        print(drawer.contentOffset - scrollView.contentOffset.y)
         
         if distance(for: drawer) < dimStartDistance
         {

@@ -303,6 +303,8 @@ open class DoublePulleyViewController: PulleyViewController
     
     override public func scrollViewDidScroll(_ scrollView: UIScrollView)
     {
+        print("scrollViewDidScroll for drawer type: \((scrollView as? PulleyPassthroughScrollView)?.parentDrawer?.type.rawValue)")
+        print("scrollView contentOffset = \(scrollView.contentOffset)")
         super.scrollViewDidScroll(scrollView)
         if let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer, !drawer.isSnapbackAnimation
         {
@@ -431,7 +433,9 @@ open class DoublePulleyViewController: PulleyViewController
         let adjustedRightSafeArea = bottomDrawer.adjustDrawerHorizontalInsetToSafeArea ? pulleySafeAreaInsets.right : 0.0
         
         // Layout scrollview
-        let drawerheight: CGFloat = getStopList(for: drawer, activeList: false).max() ?? 0.0
+//        let drawerheight: CGFloat = getStopList(for: drawer, activeList: false).max() ?? 0.0
+        let drawerheight: CGFloat = drawer.heightOfOpenDrawer //?? 0.0
+        
         let yOrigin: CGFloat
         switch drawer.type
         {
@@ -507,17 +511,9 @@ open class DoublePulleyViewController: PulleyViewController
         drawer.scrollView.transform = CGAffineTransform.identity
         drawer.contentContainer.transform = drawer.scrollView.transform
         drawer.shadowView.transform = drawer.scrollView.transform
-
+        
+        if !drawer.isKeyboardAnimating {
         setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
+        }
     }
-    
-    //MARK: Public Functions
-    
-//    public func setNeedsActiveDrawerPositionsUpdate()
-//    {
-//        
-//        bottomDrawer
-//    }
-    
 }
-

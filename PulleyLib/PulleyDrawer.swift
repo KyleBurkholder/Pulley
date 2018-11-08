@@ -228,6 +228,8 @@ public class PulleyDrawer: Hashable
         return drawerDelegate?.activeDrawerPositions?() ?? supportedPositions
     }
     
+//    var keyboardOffset: CGFloat?
+    
     //MARK: Margin properties
     var contentOffset: CGFloat
     {
@@ -367,6 +369,8 @@ public class PulleyDrawer: Hashable
     
     public var isAnimatingPosition: Bool = false
     
+    public var isKeyboardAnimating: Bool = false
+    
     public var isSnapbackAnimation: Bool = false
     
     //MARK: Misc properties
@@ -430,12 +434,64 @@ public class PulleyDrawer: Hashable
     var snapShotContentView: UIView? = UIView()
 
     
-    //MARK: Internal functions
+    //MARK: Internal methods
     
     func enforceCanScrollDrawer()
     {
         scrollView.isScrollEnabled = allowsUserDrawerPositionChange && supportedPositions.count > 1
     }
-}
+    
+    //MARK: External methods
+    
+    public func keyboardShift(_ shift: CGFloat, curve: UIViewAnimationCurve, duration: TimeInterval)
+    {
+        print("curve \(curve.rawValue)")
+        print("duration \(duration)")
+        if type == .bottom
+        {
+
+//            let moveToValue = scrollView.contentOffset.y + shift
+//            print("moveToValue = \(moveToValue)")
+//
+//            let newCurve = UIView.AnimationCurve.easeIn
+//                let animator = UIViewPropertyAnimator(duration: duration + 2.0, curve: newCurve)
+//                { [weak self] in
+//                        self?.scrollView.setContentOffset(CGPoint(x: 0, y: moveToValue), animated: false)
+//
+//            }
+//                animator.startAnimation()
+            print("shift = \(shift)")
+            let moveToValue = scrollView.contentOffset.y + shift
+            print("moveToValue = \(moveToValue)")
+//            let newCurve = UIView.AnimationCurve.linear
+//            let animator = UIViewPropertyAnimator(duration: duration, curve: newCurve)
+//            { [weak self] in
+//                self?.isKeyboardAnimating = true
+//                self?.scrollView.setContentOffset(CGPoint(x: 0, y: moveToValue), animated: false)
+//                self?.delegate?.layoutViewIfViewLoaded()
+//
+//            }
+//            animator.addCompletion()
+//                {[weak self] _ in
+//                    self?.isKeyboardAnimating = false
+//            }
+//            animator.startAnimation()
+//
+            
+            UIView.animate(withDuration: duration, delay: 0.0, options: UIViewAnimationOptions.curveLinear, animations:
+                { [weak self] in
+                    self?.isKeyboardAnimating = true
+                    self?.scrollView.setContentOffset(CGPoint(x: 0, y: moveToValue), animated: false)
+                    self?.delegate?.layoutViewIfViewLoaded()
+                }, completion:
+                {[weak self] _ in
+                    self?.isKeyboardAnimating = false
+            })
+            
+        }
+        }
+        
+    }
+
 
 
