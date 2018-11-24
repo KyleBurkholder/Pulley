@@ -443,10 +443,33 @@ public class PulleyDrawer: Hashable
     
     //MARK: External methods
     
+    func drawerPosition(at position: CGFloat) -> PulleyPosition
+    {
+        if abs(Float(position - collapsedHeight)) <= Float.ulpOfOne
+        {
+            return .collapsed
+        } else if abs(Float(position - standardHeight)) <= Float.ulpOfOne
+        {
+            return .standard
+        } else if abs(Float(position - partialRevealHeight)) <= Float.ulpOfOne
+        {
+            return .partiallyRevealed
+        } else if abs(Float(position - revealHeight)) <= Float.ulpOfOne
+        {
+            return .revealed
+        } else if abs(Float(position - heightOfOpenDrawer)) <= Float.ulpOfOne
+        {
+            return .open
+        } else
+        {
+            return .closed
+        }
+    }
+    
     public func keyboardShift(_ shift: CGFloat, curve: UIViewAnimationCurve, duration: TimeInterval)
     {
-        print("curve \(curve.rawValue)")
-        print("duration \(duration)")
+//        print("curve \(curve.rawValue)")
+//        print("duration \(duration)")
         if type == .bottom
         {
 
@@ -460,9 +483,10 @@ public class PulleyDrawer: Hashable
 //
 //            }
 //                animator.startAnimation()
-            print("shift = \(shift)")
+//            print("shift = \(shift)")
             let moveToValue = scrollView.contentOffset.y + shift
-            print("moveToValue = \(moveToValue)")
+//            print("moveToValue = \(moveToValue)")
+            let newPosition = drawerPosition(at: moveToValue)
 //            let newCurve = UIView.AnimationCurve.linear
 //            let animator = UIViewPropertyAnimator(duration: duration, curve: newCurve)
 //            { [weak self] in
@@ -486,6 +510,7 @@ public class PulleyDrawer: Hashable
                 }, completion:
                 {[weak self] _ in
                     self?.isKeyboardAnimating = false
+                    self?.drawerPosition = newPosition
             })
             
         }

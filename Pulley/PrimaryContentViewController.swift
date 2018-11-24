@@ -40,7 +40,7 @@ class PrimaryContentViewController: UIViewController {
         // drawer.drawerBackgroundVisualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
 
         // We want the 'side panel' layout in landscape iPhone / iPad, so we set this to 'automatic'. The default is 'bottomDrawer' for compatibility with older Pulley versions.
-        self.pulleyViewController?.displayMode = .leftSide
+        //self.pulleyViewController?.displayMode = .leftSide
     }
     
     @IBAction func runPrimaryContentTransitionWithoutAnimation(sender: AnyObject) {
@@ -60,7 +60,7 @@ extension PrimaryContentViewController: PulleyPrimaryContentControllerDelegate {
     
     func makeUIAdjustmentsForFullscreen(progress: CGFloat, bottomSafeArea: CGFloat)
     {
-        guard let drawer = self.pulleyViewController, drawer.bottomDrawer.currentDisplayMode == .bottomDrawer else {
+        guard let drawer = self.pulleyViewController, drawer.bottomDrawer.currentDisplayMode == .drawer else {
             controlsContainer.alpha = 1.0
             return
         }
@@ -70,7 +70,7 @@ extension PrimaryContentViewController: PulleyPrimaryContentControllerDelegate {
     
     func drawerChangedDistanceFromBottom(drawer: PulleyViewController, distance: CGFloat, bottomSafeArea: CGFloat)
     {
-        guard drawer.bottomDrawer.currentDisplayMode == .bottomDrawer else {
+        guard drawer.bottomDrawer.currentDisplayMode == .drawer else {
             
             temperatureLabelBottomConstraint.constant = temperatureLabelBottomDistance
             return

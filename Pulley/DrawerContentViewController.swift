@@ -67,13 +67,13 @@ class DrawerContentViewController: UIViewController {
 
 extension DrawerContentViewController: PulleyDrawerViewControllerDelegate {
 
-    func collapsedDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
+    func collapsedDrawerHeight(originSafeArea bottomSafeArea: CGFloat) -> CGFloat
     {
         // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
         return 68.0 + bottomSafeArea
     }
     
-    func partialRevealDrawerHeight(bottomSafeArea: CGFloat) -> CGFloat
+    func partialRevealDrawerHeight(originSafeArea bottomSafeArea: CGFloat) -> CGFloat
     {
         // For devices with a bottom safe area, we want to make our drawer taller. Your implementation may not want to do that. In that case, disregard the bottomSafeArea value.
         return 264.0 + bottomSafeArea
@@ -129,7 +129,7 @@ extension DrawerContentViewController: PulleyDrawerViewControllerDelegate {
     func drawerDisplayModeDidChange(drawer: PulleyViewController) {
         
         print("Drawer: \(drawer.bottomDrawer.currentDisplayMode)")
-        gripperTopConstraint.isActive = drawer.bottomDrawer.currentDisplayMode == .bottomDrawer
+        gripperTopConstraint.isActive = drawer.bottomDrawer.currentDisplayMode == .drawer
     }
 }
 

@@ -371,7 +371,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     override open func viewDidLayoutSubviews()
     {
         super.viewDidLayoutSubviews()
-        print("viewDidLayoutSubviews")
+//        print("viewDidLayoutSubviews")
         
         //TODO: Find out how to check what self's type is. Hacky way installed.
         guard (self as? DoublePulleyViewController) == nil else { return }
@@ -540,29 +540,6 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
         default:
             return 0
-        }
-    }
-    
-    func drawerPosition(for drawer: PulleyDrawer, at position: CGFloat) -> PulleyPosition
-    {
-        if abs(Float(position - drawer.collapsedHeight)) <= Float.ulpOfOne
-        {
-            return .collapsed
-        } else if abs(Float(position - drawer.standardHeight)) <= Float.ulpOfOne
-        {
-            return .standard
-        } else if abs(Float(position - drawer.partialRevealHeight)) <= Float.ulpOfOne
-        {
-            return .partiallyRevealed
-        } else if abs(Float(position - drawer.revealHeight)) <= Float.ulpOfOne
-        {
-            return .revealed
-        } else if abs(Float(position - drawer.heightOfOpenDrawer)) <= Float.ulpOfOne
-        {
-            return .open
-        } else
-        {
-            return .closed
         }
     }
  
@@ -1193,7 +1170,7 @@ extension PulleyViewController: UIScrollViewDelegate {
             }
         }
         
-        let closestValidDrawerPosition: PulleyPosition = drawerPosition(for: drawer, at: currentClosestStop)
+        let closestValidDrawerPosition: PulleyPosition = drawer.drawerPosition(at: currentClosestStop)
         
         let snapModeToUse: PulleySnapMode = closestValidDrawerPosition == drawer.drawerPosition ? drawer.snapMode : .nearestPosition
         

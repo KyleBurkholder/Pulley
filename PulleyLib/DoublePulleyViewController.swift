@@ -246,7 +246,7 @@ open class DoublePulleyViewController: PulleyViewController
     
     override public func setDrawerPosition(for loadDrawer: PulleyDrawer?, position: PulleyPosition, animated: Bool, completion: PulleyAnimationCompletionBlock? = nil)
     {
-        print("setDrawerPosition, drawer raw \(loadDrawer?.type.rawValue), position Raw:\(position.rawValue), animated: \(animated)")
+//        print("setDrawerPosition, drawer raw \(loadDrawer?.type.rawValue), position Raw:\(position.rawValue), animated: \(animated)")
         var passCompletion = completion
         if animated
         {
@@ -303,8 +303,8 @@ open class DoublePulleyViewController: PulleyViewController
     
     override public func scrollViewDidScroll(_ scrollView: UIScrollView)
     {
-        print("scrollViewDidScroll for drawer type: \((scrollView as? PulleyPassthroughScrollView)?.parentDrawer?.type.rawValue)")
-        print("scrollView contentOffset = \(scrollView.contentOffset)")
+//        print("scrollViewDidScroll for drawer type: \((scrollView as? PulleyPassthroughScrollView)?.parentDrawer?.type.rawValue)")
+//        print("scrollView contentOffset = \(scrollView.contentOffset)")
         super.scrollViewDidScroll(scrollView)
         if let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer, !drawer.isSnapbackAnimation
         {
@@ -397,7 +397,7 @@ open class DoublePulleyViewController: PulleyViewController
                     let snapbackCompletion =  { (completed: Bool) in
                         checkDrawer.isSnapbackAnimation = false
                     }
-                    setDrawerPosition(for: checkDrawer, position: drawerPosition(for: checkDrawer, at: currentStopValue), animated: true, completion: snapbackCompletion)
+                    setDrawerPosition(for: checkDrawer, position: checkDrawer.drawerPosition(at: currentStopValue), animated: true, completion: snapbackCompletion)
                 }
             }
         }
@@ -450,7 +450,7 @@ open class DoublePulleyViewController: PulleyViewController
         
         drawer.scrollView.frame = CGRect(x: adjustedLeftSafeArea, y: yOrigin, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: drawerheight)
         
-        print("\(drawer.type.rawValue) drawerScrollView frame = \(drawer.scrollView.frame)")
+//        print("\(drawer.type.rawValue) drawerScrollView frame = \(drawer.scrollView.frame)")
         
         drawer.scrollView.addSubview(drawer.shadowView)
         if let drawerBackgroundVisualEffectView = drawer.backgroundVisualEffectView
@@ -478,7 +478,7 @@ open class DoublePulleyViewController: PulleyViewController
             return
         }
         drawer.contentContainer.frame = CGRect(x: 0, y: yContentContainer, width: drawer.scrollView.bounds.width, height: heightContentContainer)
-        print("\(drawer.type.rawValue) drawerContentContainer frame = \(drawer.contentContainer.frame)")
+//        print("\(drawer.type.rawValue) drawerContentContainer frame = \(drawer.contentContainer.frame)")
         drawer.backgroundVisualEffectView?.frame = drawer.contentContainer.frame
         drawer.shadowView.frame = drawer.contentContainer.frame
         drawer.backgroundSnapShotView?.frame = drawer.contentContainer.frame
@@ -486,8 +486,8 @@ open class DoublePulleyViewController: PulleyViewController
         
 
         
-        print("\(drawer.type.rawValue) drawer.scrollView.contentoffest = \(drawer.scrollView.contentOffset.y)")
-        print("\(drawer.type.rawValue) drawerScrollView contentSize = \(drawer.scrollView.contentSize)")
+//        print("\(drawer.type.rawValue) drawer.scrollView.contentoffest = \(drawer.scrollView.contentOffset.y)")
+//        print("\(drawer.type.rawValue) drawerScrollView contentSize = \(drawer.scrollView.contentSize)")
         
         // Update rounding mask and shadows
         let borderPath = UIBezierPath(roundedRect: drawer.contentContainer.bounds, byRoundingCorners: cornerToRound, cornerRadii: CGSize(width: drawer.cornerRadius, height: drawer.cornerRadius)).cgPath
