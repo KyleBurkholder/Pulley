@@ -184,6 +184,14 @@ public class PulleyDrawer: Hashable
         return kPulleyDefaultRevealHeight
     }
     
+    public var peakHeight: CGFloat {
+        if let originSafeArea = delegate?.getOriginSafeArea(for: self)
+        {
+            return drawerDelegate?.peakDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaulPeakHeight
+        }
+        return kPulleyDefaulPeakHeight
+    }
+    
     // The visible height of the drawer. Useful for adjusting the display of content in the main content view.
     public var visibleDrawerHeight: CGFloat {
         if drawerPosition == .closed {

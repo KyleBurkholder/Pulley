@@ -251,6 +251,8 @@ open class DoublePulleyViewController: PulleyViewController
         if animated
         {
             let doublDisplayLink = CADisplayLink(target: self, selector: #selector(displayFunction))
+            print("added")
+            print(doublDisplayLink)
             doublDisplayLink.add(to: .main, forMode: .commonModes)
             passCompletion = { [weak self] (success: Bool) -> Void in
                 //TODO: Check to make sure this completion is actually called.
@@ -278,13 +280,16 @@ open class DoublePulleyViewController: PulleyViewController
         super.setDrawerPosition(for: loadDrawer, position: position, animated: animated, completion: passCompletion)
     }
     
-    override func invalidateDisplayLink(for displayLink: CADisplayLink)
-    {
-        if !drawers.contains(where: {$0.isAnimatingPosition})
-        {
-            displayLink.invalidate()
-        }
-    }
+//    override func invalidateDisplayLink(for displayLink: CADisplayLink)
+//    {
+//        print(displayLink)
+//        if !drawers.contains(where: {$0.isAnimatingPosition})
+//        {
+//            print("closed")
+//            print(displayLink)
+//            displayLink.invalidate()
+//        }
+//    }
     
     override public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
     {
@@ -329,21 +334,25 @@ open class DoublePulleyViewController: PulleyViewController
     {
         for drawer in drawers
         {
+            drawer.drawerDelegate?.animationTick?(originSafeArea: getOriginSafeArea(for: drawer))
+        
             if distance(for: drawer) < dimStartDistance
             {
                 var progress: CGFloat = (dimStartDistance - distance(for: drawer)) / (dimStartDistance - dimEndDistance)
                 progress = progress > 1.0 ? 1.0 : progress
                 backgroundDimmingView.alpha = progress * backgroundDimmingOpacity
-                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
+                //I turned off the snapshot because it was effecting performance and it just doesn't matter on my app
+//                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
             } else
             {
                 backgroundDimmingView.alpha = 0.0
-                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
+                //I turned off the snapshot because it was effecting performance and it just doesn't matter on my app
+//                alphaDimmingCheck(for: drawer, with: backgroundDimmingView.alpha)
             }
         }
     }
     
-    override func distance(for drawer: PulleyDrawer) -> CGFloat
+    override public func distance(for drawer: PulleyDrawer) -> CGFloat
     {
         var remainingSpace = view.bounds.height
         for drawer in drawers
