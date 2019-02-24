@@ -121,6 +121,13 @@ open class DoublePulleyViewController: PulleyViewController
         self.view.addSubview(topDrawer.scrollView)
     }
     
+    override open func viewDidAppear(_ animated: Bool)
+    {
+        super.viewDidAppear(animated)
+        setDrawerPosition(for: topDrawer, position: topDrawer.drawerPosition, animated: false)
+        setDrawerPosition(for: bottomDrawer, position: bottomDrawer.drawerPosition, animated: false)
+    }
+    
     override open func viewDidLoad() {
         super.viewDidLoad()
         
@@ -199,8 +206,14 @@ open class DoublePulleyViewController: PulleyViewController
         bottomDrawer.currentDisplayMode = .drawer
         topDrawer.currentDisplayMode = .drawer
         
+        if !topDrawer.isAnimatingPosition
+        {
         didLayoutSubviews(for: topDrawer)
+        }
+        if !bottomDrawer.isAnimatingPosition
+        {
         didLayoutSubviews(for: bottomDrawer)
+        }
 
         backgroundDimmingView.frame = CGRect(x: 0.0, y: 0.0, width: self.view.bounds.width, height: self.view.bounds.height)
 
@@ -282,11 +295,8 @@ open class DoublePulleyViewController: PulleyViewController
     
 //    override func invalidateDisplayLink(for displayLink: CADisplayLink)
 //    {
-//        print(displayLink)
 //        if !drawers.contains(where: {$0.isAnimatingPosition})
 //        {
-//            print("closed")
-//            print(displayLink)
 //            displayLink.invalidate()
 //        }
 //    }
@@ -323,6 +333,7 @@ open class DoublePulleyViewController: PulleyViewController
         {
             if checkDrawer.isAnimatingPosition, !checkDrawer.isSnapbackAnimation
             {
+//                print("Issue slight drawer studder rawValue of animation call: \(checkDrawer.type.rawValue)")
                 checkIfDrawersOverlap(scrollView: checkDrawer.scrollView)
                 return
             }
@@ -379,14 +390,12 @@ open class DoublePulleyViewController: PulleyViewController
         let finalRemainingSpace = view.bounds.height - finalDrawerContentOffset
         for checkDrawer in drawersToCheck
         {
-            
             let checkScrollViewLayerY = checkDrawer.scrollView.layer.presentation()?.bounds.origin.y ?? checkDrawer.scrollView.contentOffset.y
             let checkDrawerContentOffset: CGFloat = checkDrawer.type == DrawerType.bottom ? checkScrollViewLayerY : checkDrawer.contentOffset - checkScrollViewLayerY
             
             var previousStopValue = stopValue(for: checkDrawer.drawerPosition, from: checkDrawer)
             var lowerStopList = getStopList(for: checkDrawer, activeList: true).filter({$0 < previousStopValue})
             var currentStopValue = previousStopValue
-            
             guard checkDrawerContentOffset > remainingSpace + (drawer.bounceOverflowMargin - 5.0) else
             {
                 return
@@ -399,7 +408,8 @@ open class DoublePulleyViewController: PulleyViewController
                         let currentMax = lowerStopList.remove(at: positionOfMax)
                         currentStopValue = currentMax
                     }
-                } while currentStopValue > finalRemainingSpace && currentStopValue != previousStopValue
+
+                } while currentStopValue > (finalRemainingSpace + 1.0) && currentStopValue != previousStopValue
                 if previousStopValue != currentStopValue, !inViewDidLayoutSubview
                 {
                     checkDrawer.isSnapbackAnimation = true
@@ -521,8 +531,9 @@ open class DoublePulleyViewController: PulleyViewController
         drawer.contentContainer.transform = drawer.scrollView.transform
         drawer.shadowView.transform = drawer.scrollView.transform
         
-        if !drawer.isKeyboardAnimating {
-        setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
+        if !drawer.isKeyboardAnimating && !drawer.isScrolling
+        {
+            setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
         }
     }
 }

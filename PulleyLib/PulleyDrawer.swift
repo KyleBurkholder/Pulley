@@ -377,6 +377,8 @@ public class PulleyDrawer: Hashable
     
     public var isAnimatingPosition: Bool = false
     
+    public var isScrolling: Bool = false
+    
     public var isKeyboardAnimating: Bool = false
     
     public var isSnapbackAnimation: Bool = false

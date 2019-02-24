@@ -83,7 +83,7 @@ import UIKit
     
     @objc optional func animationCompletion()
     
-    @objc optional func endAnimations()
+    @objc optional func cancelAnimations()
     
     @objc optional func peakReleaseAction()
 }
@@ -746,7 +746,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         drawer.snapShotContentView?.layer.removeAllAnimations()
         updatesnapShotContentFrame(for: drawer)
 
-        drawer.drawerDelegate?.endAnimations?()
+        drawer.drawerDelegate?.cancelAnimations?()
         
         drawer.drawerPosition = position
         
@@ -777,10 +777,14 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             let mainAnimation = CASpringAnimation(keyPath: "bounds.origin.y", dampingRatio: drawer.animationSpringDamping, frequencyResponse: drawer.animationDuration)
             let maskShiftValue = contentOffset - drawer.scrollView.bounds.origin.y
-            print("Drawer type: \(drawer.type.rawValue) contentOffset: \(contentOffset)")
+            print("Issue: wrong drawer location: drawerType: \(drawer.type.rawValue) stopToMoveTo \(stopToMoveTo) maskShiftValue \(maskShiftValue) drawer.contentOffset \(drawer.contentOffset)")
+            print("Drawer type: \(drawer.type.rawValue) contentOffset: \(contentOffset) ")
             let movingShiftY = (drawer.scrollView.layer.presentation()?.bounds.origin.y ?? drawer.scrollView.bounds.origin.y) - drawer.scrollView.bounds.origin.y
             mainAnimation.fromValue = drawer.scrollView.bounds.origin.y + movingShiftY
+
+            print("Issue: wrong drawer location: fromValue: \(drawer.scrollView.bounds.origin.y)")
             mainAnimation.toValue = drawer.scrollView.bounds.origin.y + maskShiftValue
+            print("Issue: wrong drawer location: toValue: \(drawer.scrollView.bounds.origin.y + maskShiftValue)")
             mainAnimation.duration = mainAnimation.settlingDuration
             drawer.scrollView.bounds.origin.y += maskShiftValue
             delegate?.drawerPositionDidChange?(drawer: self, originSafeArea: drawer.originSafeArea, animated: true)
@@ -1183,6 +1187,7 @@ extension PulleyViewController: UIScrollViewDelegate {
         print("scrollViewDidEndDragging")
         let drawer: PulleyDrawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
         
+        drawer.isScrolling = false
         let drawerStops: [CGFloat] = drawer.activePositions.filter({$0 != .peak}).map({stopValue(for: $0, from: drawer)})
         let currentDrawerPositionStop: CGFloat = stopValue(for: drawer.drawerPosition, from: drawer)
         
@@ -1278,6 +1283,8 @@ extension PulleyViewController: UIScrollViewDelegate {
         let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
         let originSafeArea = getOriginSafeArea(for: drawer)
         
+        drawer.isScrolling = true
+        
         print("originaSafeArea = \(originSafeArea)")
         
         let scrollViewLayerY = (scrollView.layer.presentation()?.bounds.origin.y ?? scrollView.contentOffset.y)
@@ -1293,7 +1300,7 @@ extension PulleyViewController: UIScrollViewDelegate {
             drawer.scrollView.layer.removeAllAnimations()
             drawer.snapShotContentView?.layer.removeAllAnimations()
             
-            drawer.drawerDelegate?.endAnimations?()
+            drawer.drawerDelegate?.cancelAnimations?()
         }
         
 
