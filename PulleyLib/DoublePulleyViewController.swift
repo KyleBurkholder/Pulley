@@ -415,6 +415,7 @@ open class DoublePulleyViewController: PulleyViewController
                     checkDrawer.isSnapbackAnimation = true
                     let snapbackCompletion =  { (completed: Bool) in
                         checkDrawer.isSnapbackAnimation = false
+                        drawer.drawerDelegate?.animationCompletion?()
                     }
                     setDrawerPosition(for: checkDrawer, position: checkDrawer.drawerPosition(at: currentStopValue), animated: true, completion: snapbackCompletion)
                 }

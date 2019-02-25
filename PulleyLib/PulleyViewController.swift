@@ -746,6 +746,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         drawer.snapShotContentView?.layer.removeAllAnimations()
         updatesnapShotContentFrame(for: drawer)
 
+        
         drawer.drawerDelegate?.cancelAnimations?()
         
         drawer.drawerPosition = position
@@ -763,15 +764,19 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             
             let displayLink = CADisplayLink(target: self, selector: #selector(animationTick(_:)))
             
+            
             CATransaction.begin()
-//            CATransaction.setDisableActions(true)
+            //            CATransaction.setDisableActions(true)
             CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
             CATransaction.setCompletionBlock({[weak self] in
                 print("animation complete")
                 drawer.isAnimatingPosition = false
                 self?.syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode()
                 self?.invalidateDisplayLink(for: displayLink)
-                drawer.drawerDelegate?.animationCompletion?()
+                if !drawer.isSnapbackAnimation
+                {
+                    drawer.drawerDelegate?.animationCompletion?()
+                }
                 completion?(true)
             })
             
