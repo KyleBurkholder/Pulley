@@ -31,12 +31,12 @@ protocol PulleyChestOfDrawers: AnyObject
     func calculateOpenDrawerHeight(for drawer: PulleyDrawer) -> CGFloat
 }
 
-public class PulleyDrawer: Hashable
+public class PulleyDrawer: NSObject
 {
     
     //MARK: Properties
     
-    public var hashValue: Int
+    override public var hash: Int
     {
         return contentContainer.hashValue ^ shadowView.hashValue ^ scrollView.hashValue &* 13
     }
@@ -49,7 +49,7 @@ public class PulleyDrawer: Hashable
     let contentContainer: UIView = UIView()
     let shadowView: UIView = UIView()
     let scrollView: PulleyPassthroughScrollView = PulleyPassthroughScrollView()
-    let type: DrawerType
+    public let type: DrawerType
     
     weak var delegate: PulleyChestOfDrawers?
     
@@ -104,6 +104,7 @@ public class PulleyDrawer: Hashable
         
         scrollView.addSubview(contentContainer)
         
+        super.init()
         scrollView.parentDrawer = self
     }
     
@@ -190,6 +191,14 @@ public class PulleyDrawer: Hashable
             return drawerDelegate?.peakDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaulPeakHeight
         }
         return kPulleyDefaulPeakHeight
+    }
+    
+    public var peakLowHeight: CGFloat {
+        if let originSafeArea = delegate?.getOriginSafeArea(for: self)
+        {
+            return drawerDelegate?.peakLowDrawerHeight?(originSafeArea: originSafeArea) ?? kPulleyDefaulPeakLowHeight
+        }
+        return kPulleyDefaulPeakLowHeight
     }
     
     // The visible height of the drawer. Useful for adjusting the display of content in the main content view.
@@ -401,7 +410,7 @@ public class PulleyDrawer: Hashable
     }
     
     /// The background visual effect layer for the drawer. By default this is the extraLight effect. You can change this if you want, or assign nil to remove it.
-    public var backgroundVisualEffectView: UIVisualEffectView? = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight)) {
+    public var backgroundVisualEffectView: UIVisualEffectView? = UIVisualEffectView(effect: UIBlurEffect(style: .light)) {
         willSet {
             backgroundVisualEffectView?.removeFromSuperview()
         }

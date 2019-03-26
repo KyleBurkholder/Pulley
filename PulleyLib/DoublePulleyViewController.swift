@@ -17,6 +17,14 @@ open class DoublePulleyViewController: PulleyViewController
     
     // Public
     public var topDrawer: PulleyDrawer = PulleyDrawer(originSide: .top)
+    
+    override open var childViewControllerForStatusBarStyle: UIViewController?
+        {
+        get
+        {
+            return topDrawerContentViewController
+        }
+    }
 
     /// The current drawer view controller (shown in the drawer).
     public internal(set) var topDrawerContentViewController: UIViewController! {

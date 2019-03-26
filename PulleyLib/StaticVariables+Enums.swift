@@ -24,12 +24,14 @@
     public static let revealed = PulleyPosition(rawValue: 5)
     public static let open = PulleyPosition(rawValue: 6)
     public static let peak = PulleyPosition(rawValue: 7)
+    public static let peakLow = PulleyPosition(rawValue: 8)
     
     
     
     public static let all: [PulleyPosition] = [
         .collapsed,
         .peak,
+        .peakLow,
         .standard,
         .partiallyRevealed,
         .revealed,
@@ -72,6 +74,9 @@
             
         case "peak":
             return .peak
+            
+        case "peakLow":
+            return .peakLow
             
         default:
             print("PulleyViewController: Position for string '\(positionString)' not found. Available values are: collapsed, partiallyRevealed, open, and closed. Defaulting to collapsed.")
