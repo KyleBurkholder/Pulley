@@ -329,9 +329,13 @@ open class DoublePulleyViewController: PulleyViewController
 //        print("scrollViewDidScroll for drawer type: \((scrollView as? PulleyPassthroughScrollView)?.parentDrawer?.type.rawValue)")
 //        print("scrollView contentOffset = \(scrollView.contentOffset)")
         super.scrollViewDidScroll(scrollView)
-        if let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer, !drawer.isSnapbackAnimation
+        if let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer
         {
-        checkIfDrawersOverlap(scrollView: scrollView)
+            drawer.isSnapbackAnimation = false
+            if let otherDrawerScrollView = drawers.first(where: {$0 != drawer})?.scrollView
+            {
+                checkIfDrawersOverlap(scrollView: otherDrawerScrollView)
+            }
         }
     }
     
@@ -468,7 +472,7 @@ open class DoublePulleyViewController: PulleyViewController
         switch drawer.type
         {
         case .bottom:
-            yOrigin = self.view.bounds.height - drawerheight
+            yOrigin = self.view.bounds.height - drawerheight + drawer.keyboardOffset
             
         case .top:
             yOrigin = 0.0

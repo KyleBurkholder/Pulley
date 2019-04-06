@@ -328,6 +328,8 @@ public class PulleyDrawer: NSObject
         }
     }
     
+    public var keyboardOffset: CGFloat  = 0
+    
     //MARK: scrollView properties
     
     /// The drawer scrollview's delaysContentTouches setting
@@ -487,55 +489,27 @@ public class PulleyDrawer: NSObject
     
     public func keyboardShift(_ shift: CGFloat, curve: UIViewAnimationCurve, duration: TimeInterval)
     {
-//        print("curve \(curve.rawValue)")
-//        print("duration \(duration)")
         if type == .bottom
         {
-
-//            let moveToValue = scrollView.contentOffset.y + shift
-//            print("moveToValue = \(moveToValue)")
-//
-//            let newCurve = UIView.AnimationCurve.easeIn
-//                let animator = UIViewPropertyAnimator(duration: duration + 2.0, curve: newCurve)
-//                { [weak self] in
-//                        self?.scrollView.setContentOffset(CGPoint(x: 0, y: moveToValue), animated: false)
-//
-//            }
-//                animator.startAnimation()
-//            print("shift = \(shift)")
-            let moveToValue = scrollView.contentOffset.y + shift
-//            print("moveToValue = \(moveToValue)")
-            let newPosition = drawerPosition(at: moveToValue)
-//            let newCurve = UIView.AnimationCurve.linear
-//            let animator = UIViewPropertyAnimator(duration: duration, curve: newCurve)
-//            { [weak self] in
-//                self?.isKeyboardAnimating = true
-//                self?.scrollView.setContentOffset(CGPoint(x: 0, y: moveToValue), animated: false)
-//                self?.delegate?.layoutViewIfViewLoaded()
-//
-//            }
-//            animator.addCompletion()
-//                {[weak self] _ in
-//                    self?.isKeyboardAnimating = false
-//            }
-//            animator.startAnimation()
-//
+            if shift < 0
+            {
+                keyboardOffset = shift
+            } else
+            {
+                keyboardOffset = 0
+            }
             
             UIView.animate(withDuration: duration, delay: 0.0, options: UIViewAnimationOptions.curveLinear, animations:
                 { [weak self] in
                     self?.isKeyboardAnimating = true
-                    self?.scrollView.setContentOffset(CGPoint(x: 0, y: moveToValue), animated: false)
-                    self?.delegate?.layoutViewIfViewLoaded()
+                    self?.scrollView.frame.origin.y += shift
                 }, completion:
                 {[weak self] _ in
                     self?.isKeyboardAnimating = false
-                    self?.drawerPosition = newPosition
             })
-            
         }
-        }
-        
     }
+}
 
 
 
