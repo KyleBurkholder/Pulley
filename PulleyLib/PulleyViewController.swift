@@ -382,7 +382,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
     
         bottomDrawer.enforceCanScrollDrawer()
         setDrawerPosition(for: bottomDrawer, position: bottomDrawer.initialDrawerPosition, animated: false)
-        scrollViewDidScroll(bottomDrawer.scrollView)
+//        scrollViewDidScroll(bottomDrawer.scrollView)
         
         delegate?.drawerDisplayModeDidChange?(drawer: self, ofType: .bottom)
         (drawerContentViewController as? PulleyDrawerViewControllerDelegate)?.drawerDisplayModeDidChange?(drawer: self, ofType: .bottom)
@@ -838,7 +838,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             delegate?.drawerPositionDidChange?(drawer: drawer, originSafeArea: drawer.originSafeArea, animated: false)
             drawer.drawerDelegate?.drawerPositionDidChange?(drawer: drawer, originSafeArea: drawer.originSafeArea, animated: false)
             (primaryContentViewController as? PulleyPrimaryContentControllerDelegate)?.drawerPositionDidChange?(drawer: drawer, originSafeArea: drawer.originSafeArea, animated: false)
-
+            drawer.isScrolling = false
             completion?(true)
         }
     }

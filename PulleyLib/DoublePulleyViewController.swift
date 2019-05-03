@@ -10,6 +10,8 @@ import UIKit
 
 open class DoublePulleyViewController: PulleyViewController
 {
+    private var initialLoad: Bool = true
+    
     /// When using with Interface Builder only! Connect a containing view to this outlet.
     @IBOutlet public var topDrawerContentContainerView: UIView!
     
@@ -131,9 +133,7 @@ open class DoublePulleyViewController: PulleyViewController
     
     override open func viewDidAppear(_ animated: Bool)
     {
-        super.viewDidAppear(animated)
-        setDrawerPosition(for: topDrawer, position: topDrawer.drawerPosition, animated: false)
-        setDrawerPosition(for: bottomDrawer, position: bottomDrawer.drawerPosition, animated: false)
+        ()
     }
     
     override open func viewDidLoad() {
@@ -158,7 +158,7 @@ open class DoublePulleyViewController: PulleyViewController
         
         topDrawer.enforceCanScrollDrawer()
         setDrawerPosition(for: topDrawer, position: topDrawer.initialDrawerPosition, animated: false)
-        scrollViewDidScroll(topDrawer.scrollView)
+//        scrollViewDidScroll(topDrawer.scrollView)
         
         delegate?.drawerDisplayModeDidChange?(drawer: self, ofType: .top)
         (topDrawerContentViewController as? PulleyDrawerViewControllerDelegate)?.drawerDisplayModeDidChange?(drawer: self, ofType: .top)
