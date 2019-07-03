@@ -747,7 +747,10 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
             return
         }
         let scrollViewLayerY = drawer.scrollView.layer.presentation()?.bounds.origin.y ?? drawer.scrollView.contentOffset.y
-        drawer.scrollView.contentOffset.y = scrollViewLayerY
+        if drawer.scrollView.contentOffset.y != scrollViewLayerY
+        {
+            drawer.scrollView.contentOffset.y = scrollViewLayerY
+        }
         
         if let snapContentView = drawer.snapShotContentView
         {
@@ -786,10 +789,7 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
                 drawer.isAnimatingPosition = false
                 self?.syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode()
                 self?.invalidateDisplayLink(for: displayLink)
-//                if !drawer.isSnapbackAnimation
-//                {
-                    drawer.drawerDelegate?.animationCompletion?()
-//                }
+                drawer.drawerDelegate?.animationCompletion?()
                 completion?(true)
             })
             
@@ -1394,6 +1394,8 @@ extension PulleyViewController: UIScrollViewDelegate {
         (primaryContentViewController as? PulleyPrimaryContentControllerDelegate)?.drawerChangedDistanceFromOrigin?(drawer: drawer, distance: drawerContentOffset + lowestStop, originSafeArea: originSafeArea)
         
         syncDrawerContentViewSizeToMatchScrollPositionForSideDisplayMode()
+        
+        drawer.isScrolling = false
     }
 
 }

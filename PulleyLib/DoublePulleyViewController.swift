@@ -334,7 +334,7 @@ open class DoublePulleyViewController: PulleyViewController
             drawer.isSnapbackAnimation = false
             if let otherDrawerScrollView = drawers.first(where: {$0 != drawer})?.scrollView
             {
-                checkIfDrawersOverlap(scrollView: otherDrawerScrollView)
+                checkIfDrawersOverlap(scrollView: scrollView)
             }
         }
     }
@@ -343,7 +343,7 @@ open class DoublePulleyViewController: PulleyViewController
     {
         for checkDrawer in drawers
         {
-            if checkDrawer.isAnimatingPosition, !checkDrawer.isSnapbackAnimation
+            if !checkDrawer.isAnimatingPosition && !checkDrawer.isSnapbackAnimation
             {
 //                print("Issue slight drawer studder rawValue of animation call: \(checkDrawer.type.rawValue)")
                 checkIfDrawersOverlap(scrollView: checkDrawer.scrollView)
@@ -389,48 +389,49 @@ open class DoublePulleyViewController: PulleyViewController
     
     func checkIfDrawersOverlap(scrollView: UIScrollView)
     {
-        let drawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
+        let movingDrawer = (scrollView as? PulleyPassthroughScrollView)?.parentDrawer ?? bottomDrawer
+        guard let nonMovingDrawer = drawers.filter({$0 != movingDrawer}).first else { return }
         
-        let scrollViewLayerY = scrollView.layer.presentation()?.bounds.origin.y ?? scrollView.contentOffset.y
         
-        let drawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollViewLayerY : drawer.contentOffset - scrollViewLayerY
+        let scrollViewLayerY = nonMovingDrawer.scrollView.layer.presentation()?.bounds.origin.y ?? nonMovingDrawer.scrollView.contentOffset.y
         
-        let finalDrawerContentOffset: CGFloat = drawer.type == DrawerType.bottom ? scrollView.contentOffset.y : drawer.contentOffset - scrollView.contentOffset.y
+        let drawerContentOffset: CGFloat = nonMovingDrawer.type == DrawerType.bottom ? scrollViewLayerY : nonMovingDrawer.contentOffset - scrollViewLayerY
         
-        let drawersToCheck = drawers.filter({$0 != drawer})
+        let finalDrawerContentOffset: CGFloat = nonMovingDrawer.type == DrawerType.bottom ? nonMovingDrawer.scrollView.contentOffset.y : nonMovingDrawer.contentOffset - nonMovingDrawer.scrollView.contentOffset.y
+        
         let remainingSpace = view.bounds.height - drawerContentOffset
         let finalRemainingSpace = view.bounds.height - finalDrawerContentOffset
-        for checkDrawer in drawersToCheck
+        
+        let checkScrollViewLayerY = scrollView.layer.presentation()?.bounds.origin.y ?? scrollView.contentOffset.y
+        let checkDrawerContentOffset: CGFloat = movingDrawer.type == DrawerType.bottom ? checkScrollViewLayerY : movingDrawer.contentOffset - checkScrollViewLayerY
+        
+        var previousStopValue = stopValue(for: movingDrawer.drawerPosition, from: movingDrawer)
+        var lowerStopList = getStopList(for: movingDrawer, activeList: true).filter({$0 < previousStopValue})
+        var currentStopValue = previousStopValue
+        guard checkDrawerContentOffset > remainingSpace + (nonMovingDrawer.bounceOverflowMargin - 5.0) else
         {
-            let checkScrollViewLayerY = checkDrawer.scrollView.layer.presentation()?.bounds.origin.y ?? checkDrawer.scrollView.contentOffset.y
-            let checkDrawerContentOffset: CGFloat = checkDrawer.type == DrawerType.bottom ? checkScrollViewLayerY : checkDrawer.contentOffset - checkScrollViewLayerY
-            
-            var previousStopValue = stopValue(for: checkDrawer.drawerPosition, from: checkDrawer)
-            var lowerStopList = getStopList(for: checkDrawer, activeList: true).filter({$0 < previousStopValue})
-            var currentStopValue = previousStopValue
-            guard checkDrawerContentOffset > remainingSpace + (drawer.bounceOverflowMargin - 5.0) else
-            {
-                return
-            }
-            if currentStopValue > remainingSpace + (drawer.bounceOverflowMargin - 5.0) {
-                repeat {
-                    previousStopValue = currentStopValue
-                    if let max = lowerStopList.max(), let positionOfMax = lowerStopList.index(of: max)
-                    {
-                        let currentMax = lowerStopList.remove(at: positionOfMax)
-                        currentStopValue = currentMax
-                    }
-
-                } while currentStopValue > (finalRemainingSpace + 1.0) && currentStopValue != previousStopValue
-                if previousStopValue != currentStopValue, !inViewDidLayoutSubview
+            return
+        }
+        print("Issue: no snap: currentStopValue = \(currentStopValue)")
+        print("Issue: no snap: remainingSpace = \(remainingSpace)")
+        if currentStopValue > remainingSpace + (nonMovingDrawer.bounceOverflowMargin - 5.0) {
+            repeat {
+                previousStopValue = currentStopValue
+                if let max = lowerStopList.max(), let positionOfMax = lowerStopList.index(of: max)
                 {
-                    checkDrawer.isSnapbackAnimation = true
-                    let snapbackCompletion =  { (completed: Bool) in
-                        checkDrawer.isSnapbackAnimation = false
-                        drawer.drawerDelegate?.animationCompletion?()
-                    }
-                    setDrawerPosition(for: checkDrawer, position: checkDrawer.drawerPosition(at: currentStopValue), animated: true, completion: snapbackCompletion)
+                    let currentMax = lowerStopList.remove(at: positionOfMax)
+                    currentStopValue = currentMax
                 }
+                
+            } while currentStopValue > (finalRemainingSpace + 1.0) && currentStopValue != previousStopValue
+            if previousStopValue != currentStopValue, !inViewDidLayoutSubview
+            {
+                movingDrawer.isSnapbackAnimation = true
+                let snapbackCompletion =  { (completed: Bool) in
+                    movingDrawer.isSnapbackAnimation = false
+                    movingDrawer.drawerDelegate?.animationCompletion?()
+                }
+                setDrawerPosition(for: movingDrawer, position: movingDrawer.drawerPosition(at: currentStopValue), animated: true, completion: snapbackCompletion)
             }
         }
     }
@@ -439,6 +440,8 @@ open class DoublePulleyViewController: PulleyViewController
     
     private func didLayoutSubviews(for drawer: PulleyDrawer)
     {
+        guard !drawer.isKeyboardAnimating && !drawer.isScrolling else { return }
+        
         let originSafeArea = getOriginSafeArea(for: drawer)
         
         // Bottom inset for safe area / bottomLayoutGuide
@@ -480,9 +483,13 @@ open class DoublePulleyViewController: PulleyViewController
             return
         }
         
-        drawer.scrollView.frame = CGRect(x: adjustedLeftSafeArea, y: yOrigin, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: drawerheight)
+        let potentialNewFrame = CGRect(x: adjustedLeftSafeArea, y: yOrigin, width: self.view.bounds.width - adjustedLeftSafeArea - adjustedRightSafeArea, height: drawerheight)
+        guard drawer.scrollView.frame != potentialNewFrame else { return }
         
-//        print("\(drawer.type.rawValue) drawerScrollView frame = \(drawer.scrollView.frame)")
+        drawer.scrollView.frame = potentialNewFrame
+        
+        
+        //        print("\(drawer.type.rawValue) drawerScrollView frame = \(drawer.scrollView.frame)")
         
         drawer.scrollView.addSubview(drawer.shadowView)
         if let drawerBackgroundVisualEffectView = drawer.backgroundVisualEffectView
@@ -543,10 +550,8 @@ open class DoublePulleyViewController: PulleyViewController
         drawer.scrollView.transform = CGAffineTransform.identity
         drawer.contentContainer.transform = drawer.scrollView.transform
         drawer.shadowView.transform = drawer.scrollView.transform
+    
+        setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
         
-        if !drawer.isKeyboardAnimating && !drawer.isScrolling
-        {
-            setDrawerPosition(for: drawer, position: drawer.drawerPosition, animated: false)
-        }
     }
 }
