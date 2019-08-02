@@ -371,7 +371,7 @@ public class PulleyDrawer: NSObject
     //MARK: Animation constants
     
     /// The animation duration for setting the drawer position
-    public var animationDuration: CGFloat = 0.7
+    public var animationDuration: CGFloat = 0.4
     
     /// The animation delay for setting the drawer position
     public var animationDelay: TimeInterval = 0.0

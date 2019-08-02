@@ -832,7 +832,11 @@ open class PulleyViewController: UIViewController, PulleyDrawerViewControllerDel
         }
         else
         {
-
+            guard contentOffset != drawer.scrollView.contentOffset.y else
+            {
+                completion?(false)
+                return
+            }
             drawer.scrollView.setContentOffset(CGPoint(x: 0, y: contentOffset), animated: false)
             
             delegate?.drawerPositionDidChange?(drawer: drawer, originSafeArea: drawer.originSafeArea, animated: false)
